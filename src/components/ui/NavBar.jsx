@@ -26,7 +26,7 @@ export const NavBar = () => {
   const { viewMode, ejFilter, detailData, setViewMode, setEjFilter } = useDashboard();
 
   return (
-    <div className="flex flex-wrap gap-2.5 items-center mb-6">
+    <div className="flex flex-wrap gap-2.5 items-center mb-7">
       {/* Tabs de vista */}
       <div className="flex bg-card rounded-lg p-[3px] border border-border">
         {TABS.map(({ id, label }) => (

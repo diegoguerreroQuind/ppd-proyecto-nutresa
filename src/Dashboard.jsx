@@ -93,7 +93,7 @@ const DashboardContent = () => {
   );
 
   return (
-    <div className="min-h-screen bg-bg text-text-base font-sans py-6 px-5">
+    <div className="min-h-screen bg-bg text-text-base font-sans py-8 px-10">
       <DashboardHeader lastUpdate={lastUpdate} onRefresh={refresh} />
       <NavBar />
       <KpiRow kpis={kpis} banda={banda} />

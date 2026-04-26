@@ -3,7 +3,7 @@ import {
   Tooltip, ReferenceLine, Legend, ResponsiveContainer,
 } from "recharts";
 import { C, ejColor } from "../../constants/colors";
-import { Badge, Card, SectionTitle, CustomTooltip, Th, Td } from "../../components/ui";
+import { Badge, Card, SectionTitle, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
 import { fmtMin } from "../../utils/format";
 import { clasificarNivel, colorDeNivel } from "../../utils/anomalias";
 import { useDashboard } from "../../context/useDashboard";
@@ -18,7 +18,7 @@ const BandaReferencia = ({ banda }) => (
     ].map(({ label, value, color }) => (
       <div key={label} className="bg-card-alt rounded-lg py-2 px-3.5" style={{ borderLeft: `3px solid ${color}` }}>
         <p className="text-[9px] text-text-muted m-0 mb-0.5 uppercase">{label}</p>
-        <p className="text-base font-bold m-0" style={{ color }}>{value}</p>
+        <p className="text-base font-bold m-0" style={{ color, fontFamily: "'IBM Plex Mono', monospace" }}>{value}</p>
       </div>
     ))}
   </div>
@@ -82,8 +82,8 @@ const TablaClasificacion = ({ filtered, banda }) => (
                 <Td>{ejecucion.fecha?.slice(5)}</Td>
                 <Td className="text-text-sub">{ejecucion.dia_semana}</Td>
                 <Td className="font-bold" style={{ color: ejColor(ejecucion.turno) }}>{ejecucion.turno}</Td>
-                <Td className={`font-semibold ${nivel === "CRÍTICO" ? "text-quind-red" : "text-text-base"}`}>{ejecucion.total_min != null ? fmtMin(ejecucion.total_min) : "–"}</Td>
-                <Td className={`text-[11px] ${diff > 0 ? "text-quind-red" : "text-quind-green"}`}>{diff > 0 ? "+" : ""}{fmtMin(diff)}</Td>
+                <MonoTd className={`font-semibold ${nivel === "CRÍTICO" ? "text-quind-red" : "text-text-base"}`}>{ejecucion.total_min != null ? fmtMin(ejecucion.total_min) : "–"}</MonoTd>
+                <MonoTd className={`text-[11px] ${diff > 0 ? "text-quind-red" : "text-quind-green"}`}>{diff > 0 ? "+" : ""}{fmtMin(diff)}</MonoTd>
                 <Td><Badge label={nivel} color={colorDeNivel(nivel)} /></Td>
                 <Td>{ejecucion.exitoso ? <span className="text-quind-green">✓</span> : <span className="text-quind-red">⚠</span>}</Td>
                 <Td className="text-text-muted text-[11px]">{ejecucion.notas || "–"}</Td>
@@ -100,7 +100,7 @@ const TablaClasificacion = ({ filtered, banda }) => (
 export const VistaTendencia = () => {
   const { ejFilter, filtered, dailyData, banda } = useDashboard();
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <GraficoTendencia dailyData={dailyData} ejFilter={ejFilter} banda={banda} />
       <TablaClasificacion filtered={filtered} banda={banda} />
     </div>

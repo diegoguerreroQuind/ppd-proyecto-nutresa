@@ -7,7 +7,7 @@ export const KpiCard = ({ label, value, sub, color }) => (
     style={{ borderTop: `2px solid ${color}22` }}
   >
     <p className="kpi-label">{label}</p>
-    <p className="kpi-value" style={{ color }}>{value}</p>
+    <p className="kpi-value" style={{ color, fontFamily: "'IBM Plex Mono', monospace" }}>{value}</p>
     <p className="kpi-sub">{sub}</p>
   </div>
 );
@@ -64,4 +64,14 @@ export const Th = ({ children, className = "" }) => (
 
 export const Td = ({ children, className = "", style = {} }) => (
   <td className={`td-cell ${className}`} style={style}>{children}</td>
+);
+
+export const MonoTd = ({ children, style = {}, className = "" }) => (
+  <td className={`td-cell ${className}`} style={{
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: 13,
+    ...style,
+  }}>
+    {children}
+  </td>
 );

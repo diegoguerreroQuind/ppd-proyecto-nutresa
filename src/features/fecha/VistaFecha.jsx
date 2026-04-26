@@ -15,7 +15,7 @@ const EjecucionDiaCard = ({ item, banda }) => {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <span className="text-base font-bold" style={{ color: clr }}>
-          {(item.turno || item.ejecucion) === "6am" ? "🌅" : "🌇"} Ejecución {item.turno || item.ejecucion}
+          Ejecución {item.turno || item.ejecucion}
         </span>
         <div className="flex gap-2 items-center">
           <Badge label={nivel} color={colorDeNivel(nivel)} />
@@ -101,7 +101,7 @@ export const VistaFecha = () => {
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Selector de fecha */}
       <div className="flex gap-2.5 items-center">
         <input

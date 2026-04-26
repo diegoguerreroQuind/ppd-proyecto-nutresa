@@ -4,7 +4,7 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { C, ejColor } from "../../constants/colors";
-import { BackButton, Card, CustomTooltip, Th, Td } from "../../components/ui";
+import { BackButton, Card, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
 import { fmtMin, fmtM } from "../../utils/format";
 import { useDashboard } from "../../context/useDashboard";
 
@@ -49,16 +49,16 @@ const TablaDetalle = ({ items }) => (
           <tr key={i} className={`border-t border-border ${!item.exitoso ? "bg-quind-red-bg" : "bg-transparent"}`}>
             <Td>{item.fecha?.slice(5)}</Td>
             <Td className="font-bold" style={{ color: ejColor(item.ejecucion) }}>{item.ejecucion}</Td>
-            <Td className="font-semibold text-quind-green">{item.total_min != null ? fmtMin(item.total_min) : "–"}</Td>
-            <Td className="text-text-sub">{item.directo_min != null ? fmtMin(item.directo_min) : "–"}</Td>
-            <Td className="text-text-sub">{item.indirecto_min != null ? fmtMin(item.indirecto_min) : "–"}</Td>
-            <Td className="text-quind-purple">
+            <MonoTd className="font-semibold text-quind-green">{item.total_min != null ? fmtMin(item.total_min) : "–"}</MonoTd>
+            <MonoTd className="text-text-sub">{item.directo_min != null ? fmtMin(item.directo_min) : "–"}</MonoTd>
+            <MonoTd className="text-text-sub">{item.indirecto_min != null ? fmtMin(item.indirecto_min) : "–"}</MonoTd>
+            <MonoTd className="text-quind-purple">
               {item.total_min ? `${Math.round(item.indirecto_min / item.total_min * 100)}%` : "–"}
-            </Td>
-            <Td className="text-quind-teal text-[11px]">{item.registros_cargados != null ? fmtM(item.registros_cargados) : "–"}</Td>
-            <Td className={`text-[11px] ${item.registros_actualizados > 50e6 ? "text-quind-red" : "text-quind-teal"}`}>
+            </MonoTd>
+            <MonoTd className="text-quind-teal text-[11px]">{item.registros_cargados != null ? fmtM(item.registros_cargados) : "–"}</MonoTd>
+            <MonoTd className={`text-[11px] ${item.registros_actualizados > 50e6 ? "text-quind-red" : "text-quind-teal"}`}>
               {item.registros_actualizados != null ? fmtM(item.registros_actualizados) : "–"}
-            </Td>
+            </MonoTd>
             <Td>
               {item.exitoso
                 ? <span className="text-quind-green">✓</span>
@@ -80,7 +80,7 @@ export const PanelDetalle = () => {
   const titulo = type === "semana" ? data.semana : data.fecha;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <BackButton onClick={clearDetail} />
 
       <Card className="border-border-2">

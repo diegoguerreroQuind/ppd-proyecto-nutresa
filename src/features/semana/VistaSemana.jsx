@@ -3,7 +3,7 @@ import {
   Tooltip, ReferenceLine, Legend, ResponsiveContainer,
 } from "recharts";
 import { C } from "../../constants/colors";
-import { Card, SectionTitle, Badge, CustomTooltip, Th, Td } from "../../components/ui";
+import { Card, SectionTitle, Badge, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
 import { fmtMin, fmtM } from "../../utils/format";
 import { useDashboard } from "../../context/useDashboard";
 
@@ -60,12 +60,12 @@ const TablaSemanal = ({ weeklyData, ejFilter, banda, onRowClick }) => (
               className="table-row-hover border-t border-border cursor-pointer"
             >
               <Td className="text-quind-green font-semibold">{semanaInfo.semana}</Td>
-              <Td className={ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}>{semanaInfo.prom6am != null ? fmtMin(semanaInfo.prom6am) : "–"}</Td>
-              <Td className={ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}>{semanaInfo.prom2pm != null ? fmtMin(semanaInfo.prom2pm) : "–"}</Td>
-              <Td className="text-quind-green text-xs">{semanaInfo.minTotal != null ? fmtMin(semanaInfo.minTotal) : "–"}</Td>
-              <Td className={`text-xs ${semanaInfo.maxTotal > (banda?.critico ?? 0) ? "text-quind-red" : "text-text-base"}`}>{semanaInfo.maxTotal != null ? fmtMin(semanaInfo.maxTotal) : "–"}</Td>
-              <Td className="text-quind-purple">{semanaInfo.pctDir != null ? `${semanaInfo.pctDir.toFixed(0)}%` : "–"}</Td>
-              <Td className="text-text-muted text-[11px]">{semanaInfo.picoReg != null ? fmtM(semanaInfo.picoReg) : "–"}</Td>
+              <MonoTd className={ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}>{semanaInfo.prom6am != null ? fmtMin(semanaInfo.prom6am) : "–"}</MonoTd>
+              <MonoTd className={ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}>{semanaInfo.prom2pm != null ? fmtMin(semanaInfo.prom2pm) : "–"}</MonoTd>
+              <MonoTd className="text-quind-green text-xs">{semanaInfo.minTotal != null ? fmtMin(semanaInfo.minTotal) : "–"}</MonoTd>
+              <MonoTd className={`text-xs ${semanaInfo.maxTotal > (banda?.critico ?? 0) ? "text-quind-red" : "text-text-base"}`}>{semanaInfo.maxTotal != null ? fmtMin(semanaInfo.maxTotal) : "–"}</MonoTd>
+              <MonoTd className="text-quind-purple">{semanaInfo.pctDir != null ? `${semanaInfo.pctDir.toFixed(0)}%` : "–"}</MonoTd>
+              <MonoTd className="text-text-muted text-[11px]">{semanaInfo.picoReg != null ? fmtM(semanaInfo.picoReg) : "–"}</MonoTd>
               <Td>
                 {semanaInfo.fallos > 0
                   ? <Badge label={`⚠ ${semanaInfo.fallos}`} color={C.red} />
@@ -86,7 +86,7 @@ export const VistaSemana = () => {
   const handleRowClick = (semanaInfo) => setDetail({ type: "semana", data: semanaInfo });
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <GraficoSemanal weeklyData={weeklyData} ejFilter={ejFilter} banda={banda} />
       <TablaSemanal   weeklyData={weeklyData} ejFilter={ejFilter} banda={banda} onRowClick={handleRowClick} />
     </div>

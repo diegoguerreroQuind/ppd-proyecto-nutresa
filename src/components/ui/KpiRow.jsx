@@ -25,7 +25,7 @@ export const KpiRow = ({ kpis, banda }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
       {cards.map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}

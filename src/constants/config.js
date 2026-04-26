@@ -8,8 +8,8 @@ export const VENTANAS = { corta: 7, larga: 30 };
 // Opciones del filtro de ejecución
 export const FILTROS_EJECUCION = [
   { id: "ambos", label: "Ambas ejecuciones" },
-  { id: "6am",   label: "🌅 Ejecución 6am"  },
-  { id: "2pm",   label: "🌇 Ejecución 2pm"  },
+  { id: "6am",   label: "Ejecución 6am"  },
+  { id: "2pm",   label: "Ejecución 2pm"  },
 ];
 
 // Tabs de navegación del dashboard

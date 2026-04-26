@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { C, ejColor } from "../../constants/colors";
-import { Badge, Card, SectionTitle, Th, Td } from "../../components/ui";
+import { Badge, Card, SectionTitle, Th, Td, MonoTd } from "../../components/ui";
 import { colorDeVolumen } from "../../utils/anomalias";
 import { useDashboard } from "../../context/useDashboard";
 
@@ -13,9 +13,9 @@ const VolTooltip = ({ active, payload, label }) => {
   return (
     <div className="chart-tooltip">
       <p className="text-text-sub mb-1">{label}</p>
-      <p className="text-text-base m-0 mb-0.5">Registros: <strong>{d?.reg_M}M</strong></p>
+      <p className="text-text-base m-0 mb-0.5">Registros: <strong style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{d?.reg_M}M</strong></p>
       <p className={`m-0 mb-0.5 ${ratio > 2 ? "text-quind-red" : ratio > 1.5 ? "text-quind-amber" : "text-quind-green"}`}>
-        Ratio: <strong>{ratio}x</strong>
+        Ratio: <strong style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{ratio}x</strong>
       </p>
       <p className="m-0" style={{ color: colorDeVolumen(d?.alerta_volumetria, C) }}>{d?.alerta_volumetria}</p>
     </div>
@@ -85,9 +85,9 @@ const TablaVolumen = ({ volData }) => {
                 <tr key={i} className={`border-t border-border ${d.alerta_volumetria === "DELTA_MASIVO" ? "bg-quind-red-bg" : "bg-transparent"}`}>
                   <Td>{d.fecha?.slice(5)}</Td>
                   <Td className="font-bold" style={{ color: ejColor(d.turno) }}>{d.turno}</Td>
-                  <Td className={`font-semibold ${d.alerta_volumetria !== "NORMAL" ? "text-quind-red" : "text-text-base"}`}>{regM}M</Td>
-                  <Td className={`font-bold ${ratio > 2 ? "text-quind-red" : ratio > 1.5 ? "text-quind-amber" : "text-quind-green"}`}>{ratio}x</Td>
-                  <Td className="text-text-muted">{mediaM}M</Td>
+                  <MonoTd className={`font-semibold ${d.alerta_volumetria !== "NORMAL" ? "text-quind-red" : "text-text-base"}`}>{regM}M</MonoTd>
+                  <MonoTd className={`font-bold ${ratio > 2 ? "text-quind-red" : ratio > 1.5 ? "text-quind-amber" : "text-quind-green"}`}>{ratio}x</MonoTd>
+                  <MonoTd className="text-text-muted">{mediaM}M</MonoTd>
                   <Td><Badge label={d.alerta_volumetria} color={colorDeVolumen(d.alerta_volumetria, C)} /></Td>
                 </tr>
               );
@@ -114,7 +114,7 @@ export const VistaVolometria = () => {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <Card>
         <SectionTitle>Alertas de volumetría — Registros actualizados</SectionTitle>
         <p className="text-xs text-text-muted -mt-2.5 mb-3.5">

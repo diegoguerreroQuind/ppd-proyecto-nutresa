@@ -26,7 +26,7 @@ const EjecucionCard = ({ ej, kpis }) => {
   return (
     <Card style={{ borderLeft: `3px solid ${clr}` }}>
       <SectionTitle color={clr}>
-        Ejecución {ej} {ej === "6am" ? "🌅" : "🌇"} — Últimos 7 días
+        Ejecución {ej} — Últimos 7 días
       </SectionTitle>
       <div className="grid grid-cols-3 gap-2.5 mb-3.5">
         {stats.map(({ l, v, colorClass }) => (
@@ -144,7 +144,7 @@ export const VistaResumen = () => {
   const ejecuciones = ejFilter === "ambos" ? ["6am", "2pm"] : [ejFilter];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-4">
         {ejecuciones.map((ej) => (
           <EjecucionCard key={ej} ej={ej} kpis={kpis} />

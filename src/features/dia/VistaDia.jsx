@@ -3,7 +3,7 @@ import {
   Tooltip, ReferenceLine, Legend, ResponsiveContainer,
 } from "recharts";
 import { C } from "../../constants/colors";
-import { Card, SectionTitle, CustomTooltip, Th, Td } from "../../components/ui";
+import { Card, SectionTitle, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
 import { fmtMin, fmtM } from "../../utils/format";
 import { useDashboard } from "../../context/useDashboard";
 
@@ -51,10 +51,10 @@ const TablaDiaria = ({ dailyData, ejFilter, onRowClick }) => (
             >
               <Td>{diaInfo.fecha?.slice(5)}</Td>
               <Td className="text-text-sub">{diaInfo.dia}{diaInfo.fin_semana ? " 🗓" : ""}</Td>
-              <Td className={`font-semibold ${ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}`}>{diaInfo.ej6am != null ? fmtMin(diaInfo.ej6am) : "–"}</Td>
-              <Td className={`font-semibold ${ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}`}>{diaInfo.ej2pm != null ? fmtMin(diaInfo.ej2pm) : "–"}</Td>
-              <Td className={`text-xs ${diaInfo.deltaTurnos > 30 ? "text-quind-red" : "text-quind-green"}`}>{diaInfo.deltaTurnos != null ? fmtMin(diaInfo.deltaTurnos) : "–"}</Td>
-              <Td className="text-text-muted text-[11px]">{diaInfo.regDia != null ? fmtM(diaInfo.regDia) : "–"}</Td>
+              <MonoTd className={`font-semibold ${ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}`}>{diaInfo.ej6am != null ? fmtMin(diaInfo.ej6am) : "–"}</MonoTd>
+              <MonoTd className={`font-semibold ${ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}`}>{diaInfo.ej2pm != null ? fmtMin(diaInfo.ej2pm) : "–"}</MonoTd>
+              <MonoTd className={`text-xs ${diaInfo.deltaTurnos > 30 ? "text-quind-red" : "text-quind-green"}`}>{diaInfo.deltaTurnos != null ? fmtMin(diaInfo.deltaTurnos) : "–"}</MonoTd>
+              <MonoTd className="text-text-muted text-[11px]">{diaInfo.regDia != null ? fmtM(diaInfo.regDia) : "–"}</MonoTd>
               <Td>
                 {diaInfo.tieneFallo
                   ? <span className="text-quind-red text-[11px]">⚠ Fallo</span>
@@ -73,7 +73,7 @@ export const VistaDia = () => {
   const { ejFilter, setDetail, dailyData, banda } = useDashboard();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <GraficoDiario dailyData={dailyData} ejFilter={ejFilter} banda={banda} />
       <TablaDiaria   dailyData={dailyData} ejFilter={ejFilter} onRowClick={(diaInfo) => setDetail({ type: "dia", data: diaInfo })} />
     </div>
