@@ -103,7 +103,13 @@ const TablaVolumen = ({ volData }) => {
 export const VistaVolometria = () => {
   const { ejFilter, volData } = useDashboard();
 
-  if (!volData || !volData.length) {
+  const filteredVolData = useMemo(() => {
+    if (!volData || volData.length === 0) return [];
+    if (ejFilter === "ambos") return volData;
+    return volData.filter(item => item.turno === ejFilter);
+  }, [volData, ejFilter]);
+
+  if (!filteredVolData || !filteredVolData.length) {
     return (
       <Card>
         <p className="text-text-muted text-[13px] m-0">
@@ -120,9 +126,9 @@ export const VistaVolometria = () => {
         <p className="text-xs text-text-muted -mt-2.5 mb-3.5">
           Ratio vs promedio histórico{ejFilter !== "ambos" ? ` · Ejecución ${ejFilter}` : ""} · Rojo = Delta masivo (&gt;2σ) · Amarillo = Delta alto (&gt;1.5σ)
         </p>
-        <GraficoVolumen volData={volData} />
+        <GraficoVolumen volData={filteredVolData} />
       </Card>
-      <TablaVolumen volData={volData} />
+      <TablaVolumen volData={filteredVolData} />
     </div>
   );
 };
