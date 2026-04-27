@@ -20,6 +20,7 @@ export const TABS = [
   { id: "tendencia",  label: "Tendencia"   },
   { id: "volumetria", label: "Volumetría"  },
   { id: "fecha",      label: "Por Fecha"   },
+  { id: "analisis",   label: "Análisis"    },
 ];
 
 // Umbrales sigma para clasificación de anomalías

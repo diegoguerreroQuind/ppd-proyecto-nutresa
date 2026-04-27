@@ -4,9 +4,15 @@ import {
 } from "recharts";
 import { C, ejColor } from "../../constants/colors";
 import { Badge, Card, SectionTitle, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
-import { fmtMin } from "../../utils/format";
+import { fmtMin, getDayName } from "../../utils/format";
 import { clasificarNivel, colorDeNivel } from "../../utils/anomalias";
 import { useDashboard } from "../../context/useDashboard";
+
+const tipoColor = (tipo) => ({
+  info: C.blue,
+  advertencia: C.amber,
+  critico: C.red,
+}[tipo] ?? C.textSub);
 
 // ─── Mini-cards de referencia de la banda ────────────────────────────────────
 const BandaReferencia = ({ banda }) => (
@@ -33,7 +39,7 @@ const buildDot = (banda, defaultColor) => (props) => {
 };
 
 // ─── Gráfico de tendencia ─────────────────────────────────────────────────────
-const GraficoTendencia = ({ dailyData, ejFilter, banda }) => (
+const GraficoTendencia = ({ dailyData, ejFilter, banda, anotacionesData }) => (
   <Card>
     <SectionTitle>Tendencia diaria con banda de tolerancia (30 días)</SectionTitle>
     <BandaReferencia banda={banda} />
@@ -46,6 +52,23 @@ const GraficoTendencia = ({ dailyData, ejFilter, banda }) => (
         <ReferenceLine y={banda?.advertencia ?? 0} stroke={`${C.amber}88`} strokeDasharray="5 3" label={{ value: "Adv",   fill: C.amber, fontSize: 9 }} />
         <ReferenceLine y={banda?.critico ?? 0}     stroke={`${C.red}88`}   strokeDasharray="5 3" label={{ value: "Crít",  fill: C.red,   fontSize: 9 }} />
         <ReferenceLine y={banda?.media ?? 0}       stroke={`${C.green}66`} strokeDasharray="3 3" label={{ value: "Media", fill: C.green, fontSize: 9 }} />
+        {(anotacionesData ?? []).map(a => (
+          <ReferenceLine
+            key={a.id}
+            x={`${getDayName(a.fecha_inicio)} ${a.fecha_inicio.slice(5)}`}
+            stroke={tipoColor(a.tipo)}
+            strokeDasharray="4 2"
+            strokeWidth={1.5}
+            label={{
+              value: a.titulo.length > 15
+                ? `${a.titulo.slice(0, 15)}…`
+                : a.titulo,
+              fill: tipoColor(a.tipo),
+              fontSize: 9,
+              position: "top",
+            }}
+          />
+        ))}
         <Legend wrapperStyle={{ fontSize: 11, color: C.textSub }} />
         {ejFilter !== "2pm" && (
           <Line type="monotone" dataKey="ej6am" name="Ejecución 6am" stroke={C.blue}  strokeWidth={2} dot={buildDot(banda, C.blue)}  />
@@ -67,8 +90,8 @@ const TablaClasificacion = ({ filtered, banda }) => (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-xs">
         <thead>
-          <tr className="thead-row">
-            {["Fecha","Día","Ejecución","Tiempo","vs Media","Clasificación","Exitoso","Notas"].map((h) => (
+          <tr className="bg-card-alt">
+            {["Fecha","Día","Ejecución","Tiempo","vs Media","Clasificación","Exitoso"].map((h) => (
               <Th key={h}>{h}</Th>
             ))}
           </tr>
@@ -86,22 +109,75 @@ const TablaClasificacion = ({ filtered, banda }) => (
                 <MonoTd className={`text-[11px] ${diff > 0 ? "text-quind-red" : "text-quind-green"}`}>{diff > 0 ? "+" : ""}{fmtMin(diff)}</MonoTd>
                 <Td><Badge label={nivel} color={colorDeNivel(nivel)} /></Td>
                 <Td>{ejecucion.exitoso ? <span className="text-quind-green">✓</span> : <span className="text-quind-red">⚠</span>}</Td>
-                <Td className="text-text-muted text-[11px]">{ejecucion.notas || "–"}</Td>
               </tr>
             );
           })}
         </tbody>
       </table>
     </div>
+    <div
+      className="px-5 py-3.5 flex flex-col gap-2"
+      style={{
+        borderTop: `1px solid ${C.border}`,
+        background: C.cardAlt,
+      }}
+    >
+      <p className="text-[11px] uppercase tracking-wide font-semibold m-0"
+         style={{ color: C.textMuted }}>
+        Significado de niveles
+      </p>
+      <div className="flex flex-wrap gap-4">
+        {[
+          {
+            nivel: "CRÍTICO",
+            color: C.red,
+            desc: "Tiempo supera la media + 2σ (30d). Posible impacto operativo.",
+          },
+          {
+            nivel: "ADVERTENCIA",
+            color: C.amber,
+            desc: "Tiempo supera la media + 1.5σ (30d). Requiere monitoreo.",
+          },
+          {
+            nivel: "NORMAL",
+            color: C.textSub,
+            desc: "Tiempo dentro de la banda esperada pero incluido por fallo en el proceso.",
+          },
+          {
+            nivel: "RÁPIDO",
+            color: C.green,
+            desc: "Tiempo por debajo de la media − 1.5σ. Ejecución inusualmente rápida.",
+          },
+        ].map(({ nivel, color, desc }) => (
+          <div
+            key={nivel}
+            className="flex items-start gap-2 min-w-[200px] flex-1"
+          >
+            <span
+              className="text-[11px] font-bold px-2 py-0.5 rounded whitespace-nowrap mt-0.5"
+              style={{ color, background: `${color}22` }}
+            >
+              {nivel}
+            </span>
+            <span
+              className="text-[11px] leading-relaxed"
+              style={{ color: C.textMuted }}
+            >
+              {desc}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   </Card>
 );
 
 // ─── Feature principal ────────────────────────────────────────────────────────
 export const VistaTendencia = () => {
-  const { ejFilter, filtered, dailyData, banda } = useDashboard();
+  const { ejFilter, filtered, dailyData, banda, anotacionesData } = useDashboard();
   return (
     <div className="flex flex-col gap-6">
-      <GraficoTendencia dailyData={dailyData} ejFilter={ejFilter} banda={banda} />
+      <GraficoTendencia dailyData={dailyData} ejFilter={ejFilter} banda={banda} anotacionesData={anotacionesData} />
       <TablaClasificacion filtered={filtered} banda={banda} />
     </div>
   );

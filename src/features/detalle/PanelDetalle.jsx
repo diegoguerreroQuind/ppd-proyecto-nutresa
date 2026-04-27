@@ -38,8 +38,8 @@ const TablaDetalle = ({ items }) => (
   <Card overflow>
     <table className="w-full border-collapse text-xs">
       <thead>
-        <tr className="thead-row">
-          {["Fecha","Ejecución","Total","Directo","Indirecto","% Indir.","Reg. Cargados","Reg. Actualizados","Estado","Notas"].map((h) => (
+        <tr className="bg-card-alt">
+          {["Fecha","Ejecución","Total","Directo","Indirecto","Reg. Cargados","Reg. Actualizados","Estado","Notas"].map((h) => (
             <Th key={h} className="text-[9px]">{h}</Th>
           ))}
         </tr>
@@ -52,9 +52,6 @@ const TablaDetalle = ({ items }) => (
             <MonoTd className="font-semibold text-quind-green">{item.total_min != null ? fmtMin(item.total_min) : "–"}</MonoTd>
             <MonoTd className="text-text-sub">{item.directo_min != null ? fmtMin(item.directo_min) : "–"}</MonoTd>
             <MonoTd className="text-text-sub">{item.indirecto_min != null ? fmtMin(item.indirecto_min) : "–"}</MonoTd>
-            <MonoTd className="text-quind-purple">
-              {item.total_min ? `${Math.round(item.indirecto_min / item.total_min * 100)}%` : "–"}
-            </MonoTd>
             <MonoTd className="text-quind-teal text-[11px]">{item.registros_cargados != null ? fmtM(item.registros_cargados) : "–"}</MonoTd>
             <MonoTd className={`text-[11px] ${item.registros_actualizados > 50e6 ? "text-quind-red" : "text-quind-teal"}`}>
               {item.registros_actualizados != null ? fmtM(item.registros_actualizados) : "–"}

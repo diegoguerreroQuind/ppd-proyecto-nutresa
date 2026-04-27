@@ -13,6 +13,7 @@ import { VistaDia }        from "./features/dia/VistaDia";
 import { VistaTendencia }  from "./features/tendencia/VistaTendencia";
 import { VistaVolometria } from "./features/volumetria/VistaVolometria";
 import { VistaFecha }      from "./features/fecha/VistaFecha";
+import { VistaAnalisis }   from "./features/analisis/VistaAnalisis";
 import { PanelDetalle }    from "./features/detalle/PanelDetalle";
 
 import { C } from "./constants/colors";
@@ -22,6 +23,7 @@ const DashboardContent = () => {
   const {
     viewMode, detailData,
     banda, kpis,
+    correlacionesData, correlacionesSpearmanData,
     loading, error, refresh, lastUpdate
   } = useDashboard();
 
@@ -109,6 +111,7 @@ const DashboardContent = () => {
           {viewMode === "tendencia"  && <VistaTendencia />}
           {viewMode === "volumetria" && <VistaVolometria />}
           {viewMode === "fecha"      && <VistaFecha />}
+          {viewMode === "analisis"   && <VistaAnalisis />}
         </>
       )}
 

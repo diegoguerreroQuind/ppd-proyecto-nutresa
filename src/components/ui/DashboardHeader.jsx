@@ -3,12 +3,12 @@ import logoQuind from "../../assets/logo-quind.png";
 export const DashboardHeader = ({ lastUpdate, onRefresh }) => (
   <div className="mb-9 relative">
     <div className="flex items-center gap-2.5 mb-1">
-      <div className="status-dot" />
+      <div className="w-2 h-2 rounded-full bg-quind-green shadow-[0_0_8px_#00e5a0]" />
       <span className="text-[11px] text-quind-green tracking-[3px] uppercase">
         Sistema activo
       </span>
     </div>
-    <h1 className="text-[26px] font-bold m-0 gradient-text">
+    <h1 className="text-[26px] font-bold m-0 bg-[linear-gradient(135deg,#e2e4ed_0%,#6b7280_100%)] bg-clip-text text-transparent">
       Monitor de Ejecuciones PPD
     </h1>
     <p className="text-text-muted text-[13px] mt-1 mb-0">

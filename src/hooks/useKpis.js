@@ -32,7 +32,8 @@ export const useKpis = (_rawData, kpisData) => {
                 : "–",
       pctDir: 0,
       pctInd: 0,
-      maxReg: Number(row.max_registros_30d) || 0,
+      maxReg:    Number(row.max_registros_30d)              || 0,
+      maxRegAct: Number(row.max_registros_actualizados_30d) || 0,
     });
 
     return {

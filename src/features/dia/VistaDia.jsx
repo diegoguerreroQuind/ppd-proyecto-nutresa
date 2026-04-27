@@ -36,8 +36,8 @@ const TablaDiaria = ({ dailyData, ejFilter, onRowClick }) => (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-[13px]">
         <thead>
-          <tr className="thead-row">
-            {["Fecha","Día","Ejec. 6am","Ejec. 2pm","Δ Entre ejecuciones","Registros día","Estado"].map((h) => (
+          <tr className="bg-card-alt">
+            {["Fecha","Día","Ejec. 6am","Ejec. 2pm","Δ Entre ejecuciones","Reg. Cargados","Reg. Actualizados","Estado"].map((h) => (
               <Th key={h}>{h}</Th>
             ))}
           </tr>
@@ -47,14 +47,31 @@ const TablaDiaria = ({ dailyData, ejFilter, onRowClick }) => (
             <tr
               key={i}
               onClick={() => onRowClick(diaInfo)}
-              className={`table-row-hover border-t border-border cursor-pointer ${diaInfo.tieneFallo ? "bg-quind-red-bg" : "bg-transparent"}`}
+              className={`border-t border-border cursor-pointer transition-colors hover:bg-card-hover ${diaInfo.tieneFallo ? "bg-quind-red-bg" : "bg-transparent"}`}
             >
               <Td>{diaInfo.fecha?.slice(5)}</Td>
               <Td className="text-text-sub">{diaInfo.dia}{diaInfo.fin_semana ? " 🗓" : ""}</Td>
               <MonoTd className={`font-semibold ${ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}`}>{diaInfo.ej6am != null ? fmtMin(diaInfo.ej6am) : "–"}</MonoTd>
               <MonoTd className={`font-semibold ${ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}`}>{diaInfo.ej2pm != null ? fmtMin(diaInfo.ej2pm) : "–"}</MonoTd>
               <MonoTd className={`text-xs ${diaInfo.deltaTurnos > 30 ? "text-quind-red" : "text-quind-green"}`}>{diaInfo.deltaTurnos != null ? fmtMin(diaInfo.deltaTurnos) : "–"}</MonoTd>
-              <MonoTd className="text-text-muted text-[11px]">{diaInfo.regDia != null ? fmtM(diaInfo.regDia) : "–"}</MonoTd>
+              <Td>
+                <span style={{
+                  color: C.teal,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11,
+                }}>
+                  {diaInfo.regCargados ? fmtM(diaInfo.regCargados) : "–"}
+                </span>
+              </Td>
+              <Td>
+                <span style={{
+                  color: diaInfo.regActualizados > 50e6 ? C.red : C.teal,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 11,
+                }}>
+                  {diaInfo.regActualizados ? fmtM(diaInfo.regActualizados) : "–"}
+                </span>
+              </Td>
               <Td>
                 {diaInfo.tieneFallo
                   ? <span className="text-quind-red text-[11px]">⚠ Fallo</span>

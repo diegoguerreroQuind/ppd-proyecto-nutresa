@@ -35,9 +35,14 @@ export const useWeeklyData = (rawData, ejFilter) => {
         promTotal:   avg(f.map((ejecucion) => ejecucion.total_min)),
         minTotal:    f.length ? Math.min(...f.map((ejecucion) => ejecucion.total_min)) : null,
         maxTotal:    f.length ? Math.max(...f.map((ejecucion) => ejecucion.total_min)) : null,
-        pctDir:      avg(f.map((ejecucion) => (ejecucion.directo_min / (ejecucion.total_min || 1)) * 100)),
         ejecuciones: f.length,
         picoReg:     regs.length ? Math.max(...regs) : null,
+        picoRegAct:  f.filter((ejecucion) => ejecucion.registros_actualizados)
+          .length
+          ? Math.max(...f
+              .filter((ejecucion) => ejecucion.registros_actualizados)
+              .map((ejecucion) => ejecucion.registros_actualizados))
+          : null,
         fallos:      f.filter((ejecucion) => !ejecucion.exitoso).length,
         items:       f,
       };

@@ -45,6 +45,9 @@ export const DashboardProvider = ({ children }) => {
     semanalData,
     diarioData,
     volData,
+    correlacionesData,
+    correlacionesSpearmanData,
+    anotacionesData,
     loading,
     error,
     lastUpdate,
@@ -80,6 +83,9 @@ export const DashboardProvider = ({ children }) => {
     semanalData,
     diarioData,
     volData,
+    correlacionesData,
+    correlacionesSpearmanData,
+    anotacionesData,
     banda,
     kpis,
     weeklyData,
@@ -96,7 +102,7 @@ export const DashboardProvider = ({ children }) => {
     setSelectedDate,
   }), [
     state, rawData, filtered, kpisData, tendenciaData, semanalData,
-    diarioData, volData, banda, kpis, weeklyData, dailyData,
+    diarioData, volData, correlacionesData, correlacionesSpearmanData, anotacionesData, banda, kpis, weeklyData, dailyData,
     loading, error, lastUpdate, refresh,
     setEjFilter, setViewMode, setDetail, clearDetail, setSelectedDate
   ]);

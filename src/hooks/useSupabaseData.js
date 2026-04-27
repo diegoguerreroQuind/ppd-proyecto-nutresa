@@ -6,7 +6,10 @@ import {
   fetchTendencia,
   fetchResumenSemanal,
   fetchResumenDiario,
-  fetchVolometria
+  fetchVolometria,
+  fetchCorrelaciones,
+  fetchCorrelacionesSpearman,
+  fetchAnotaciones,
 } from '../services/ejecucionesService';
 
 export const useSupabaseData = () => {
@@ -16,6 +19,9 @@ export const useSupabaseData = () => {
   const [semanalData, setSemanalData] = useState([]);
   const [diarioData, setDiarioData] = useState([]);
   const [volData, setVolData] = useState([]);
+  const [correlacionesData, setCorrelacionesData] = useState([]);
+  const [correlacionesSpearmanData, setCorrelacionesSpearmanData] = useState([]);
+  const [anotacionesData, setAnotacionesData] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,19 +32,18 @@ export const useSupabaseData = () => {
     setError(null);
     try {
       const [
-        raw,
-        kpis,
-        tendencia,
-        semanal,
-        diario,
-        vol
+        raw, kpis, tendencia, semanal,
+        diario, vol, correlaciones, correlacionesSpearman, anotaciones
       ] = await Promise.all([
         fetchEjecuciones(),
         fetchKpis(),
         fetchTendencia(),
         fetchResumenSemanal(),
         fetchResumenDiario(),
-        fetchVolometria()
+        fetchVolometria(),
+        fetchCorrelaciones(),
+        fetchCorrelacionesSpearman(),
+        fetchAnotaciones(),
       ].map(p => p.catch(e => {
         throw new Error(`Data fetch failed: ${e.message}`);
       })));
@@ -49,6 +54,9 @@ export const useSupabaseData = () => {
       setSemanalData(semanal ?? []);
       setDiarioData(diario ?? []);
       setVolData(vol ?? []);
+      setCorrelacionesData(correlaciones ?? []);
+      setCorrelacionesSpearmanData(correlacionesSpearman ?? []);
+      setAnotacionesData(anotaciones ?? []);
       setLastUpdate(new Date());
     } catch (err) {
       console.error('Error fetching Supabase data:', err);
@@ -94,6 +102,9 @@ export const useSupabaseData = () => {
     semanalData,
     diarioData,
     volData,
+    correlacionesData,
+    correlacionesSpearmanData,
+    anotacionesData,
     loading,
     error,
     lastUpdate,

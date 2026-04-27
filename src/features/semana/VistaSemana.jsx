@@ -46,8 +46,8 @@ const TablaSemanal = ({ weeklyData, ejFilter, banda, onRowClick }) => (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-[13px]">
         <thead>
-          <tr className="thead-row">
-            {["Semana","Ejec. 6am","Ejec. 2pm","Mínimo","Máximo","% Directo","Pico Registros","Fallos"].map((h) => (
+          <tr className="bg-card-alt">
+            {["Semana","Ejec. 6am","Ejec. 2pm","Mínimo","Máximo","Pico Cargados","Pico Actualizados","Fallos"].map((h) => (
               <Th key={h}>{h}</Th>
             ))}
           </tr>
@@ -57,15 +57,31 @@ const TablaSemanal = ({ weeklyData, ejFilter, banda, onRowClick }) => (
             <tr
               key={i}
               onClick={() => onRowClick(semanaInfo)}
-              className="table-row-hover border-t border-border cursor-pointer"
+              className="border-t border-border cursor-pointer transition-colors hover:bg-card-hover"
             >
               <Td className="text-quind-green font-semibold">{semanaInfo.semana}</Td>
               <MonoTd className={ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}>{semanaInfo.prom6am != null ? fmtMin(semanaInfo.prom6am) : "–"}</MonoTd>
               <MonoTd className={ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}>{semanaInfo.prom2pm != null ? fmtMin(semanaInfo.prom2pm) : "–"}</MonoTd>
               <MonoTd className="text-quind-green text-xs">{semanaInfo.minTotal != null ? fmtMin(semanaInfo.minTotal) : "–"}</MonoTd>
               <MonoTd className={`text-xs ${semanaInfo.maxTotal > (banda?.critico ?? 0) ? "text-quind-red" : "text-text-base"}`}>{semanaInfo.maxTotal != null ? fmtMin(semanaInfo.maxTotal) : "–"}</MonoTd>
-              <MonoTd className="text-quind-purple">{semanaInfo.pctDir != null ? `${semanaInfo.pctDir.toFixed(0)}%` : "–"}</MonoTd>
-              <MonoTd className="text-text-muted text-[11px]">{semanaInfo.picoReg != null ? fmtM(semanaInfo.picoReg) : "–"}</MonoTd>
+              <Td>
+                <span style={{
+                  color: C.teal,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 12,
+                }}>
+                  {semanaInfo.picoReg ? fmtM(semanaInfo.picoReg) : "–"}
+                </span>
+              </Td>
+              <Td>
+                <span style={{
+                  color: semanaInfo.picoRegAct > 50e6 ? C.red : C.teal,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: 12,
+                }}>
+                  {semanaInfo.picoRegAct ? fmtM(semanaInfo.picoRegAct) : "–"}
+                </span>
+              </Td>
               <Td>
                 {semanaInfo.fallos > 0
                   ? <Badge label={`⚠ ${semanaInfo.fallos}`} color={C.red} />

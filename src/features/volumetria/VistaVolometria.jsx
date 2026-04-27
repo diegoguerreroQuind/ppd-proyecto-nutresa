@@ -11,7 +11,7 @@ const VolTooltip = ({ active, payload, label }) => {
   const d = payload[0]?.payload;
   const ratio = d?.ratio_actualizados ?? d?.ratio_cargados ?? 0;
   return (
-    <div className="chart-tooltip">
+    <div className="bg-card border border-border-2 rounded-lg px-3.5 py-2.5 text-xs">
       <p className="text-text-sub mb-1">{label}</p>
       <p className="text-text-base m-0 mb-0.5">Registros: <strong style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{d?.reg_M}M</strong></p>
       <p className={`m-0 mb-0.5 ${ratio > 2 ? "text-quind-red" : ratio > 1.5 ? "text-quind-amber" : "text-quind-green"}`}>
@@ -69,7 +69,7 @@ const TablaVolumen = ({ volData }) => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
-            <tr className="thead-row">
+            <tr className="bg-card-alt">
               {["Fecha","Ejecución","Reg. actualizados","vs Promedio (ratio)","Promedio histórico","Alerta"].map((h) => (
                 <Th key={h}>{h}</Th>
               ))}
