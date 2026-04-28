@@ -12,7 +12,7 @@ import { useDashboard } from "../../context/useDashboard";
 const MiniChart = ({ items }) => {
   const data = useMemo(() => {
     return (items ?? []).map((ejecucion) => ({
-      label:     `${ejecucion.fecha.slice(8)} ${ejecucion.ejecucion}`,
+      label:     `${ejecucion.fecha.slice(8)} ${ejecucion.turno ?? ejecucion.ejecucion ?? ""}`,
       directo:   ejecucion.directo_min != null ? Number(ejecucion.directo_min) : null,
       indirecto: ejecucion.indirecto_min != null ? Number(ejecucion.indirecto_min) : null,
     }));
@@ -48,7 +48,7 @@ const TablaDetalle = ({ items }) => (
         {(items ?? []).map((item, i) => (
           <tr key={i} className={`border-t border-border ${!item.exitoso ? "bg-quind-red-bg" : "bg-transparent"}`}>
             <Td>{item.fecha?.slice(5)}</Td>
-            <Td className="font-bold" style={{ color: ejColor(item.ejecucion) }}>{item.ejecucion}</Td>
+            <Td className="font-bold" style={{ color: ejColor(item.turno ?? item.ejecucion) }}>{item.turno ?? item.ejecucion ?? "–"}</Td>
             <MonoTd className="font-semibold text-quind-green">{item.total_min != null ? fmtMin(item.total_min) : "–"}</MonoTd>
             <MonoTd className="text-text-sub">{item.directo_min != null ? fmtMin(item.directo_min) : "–"}</MonoTd>
             <MonoTd className="text-text-sub">{item.indirecto_min != null ? fmtMin(item.indirecto_min) : "–"}</MonoTd>

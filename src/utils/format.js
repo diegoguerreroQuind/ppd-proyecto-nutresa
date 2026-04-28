@@ -13,8 +13,15 @@ export const fmtMin = (m) => {
 /**
  * Formatea número grande a millones con 1 decimal: "12.3M"
  */
-export const fmtM = (n) =>
-  n != null ? `${(n / 1e6).toFixed(1)}M` : "–";
+export const fmtM = (n) => {
+  if (n == null) return "–";
+  if (n === 0)   return "0";
+  if (n < 1_000)          return `${n}`;
+  if (n < 100_000)        return `${(n / 1_000).toFixed(1)}K`;
+  if (n < 1_000_000)      return `${Math.round(n / 1_000)}K`;
+  if (n < 10_000_000)     return `${(n / 1_000_000).toFixed(2)}M`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+};
 
 /**
  * Nombre corto del día de la semana a partir de una fecha ISO
