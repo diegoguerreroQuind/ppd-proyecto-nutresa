@@ -7,10 +7,13 @@ import { nivelColorMap } from "../constants/colors";
  * @param {object} banda   - { media, sigma, advertencia, critico }
  * @returns {"CRÍTICO"|"ADVERTENCIA"|"RÁPIDO"|"NORMAL"}
  */
-export const clasificarNivel = (valor, banda) => {
-  if (valor > banda.critico)                              return "CRÍTICO";
-  if (valor > banda.advertencia)                          return "ADVERTENCIA";
-  if (valor < banda.media - SIGMA_ADVERTENCIA * banda.sigma) return "RÁPIDO";
+export const clasificarNivel = (valor, banda, exitoso = true) => {
+  if (!exitoso && (!valor || valor <= 0)) return "FALLO";
+  if (!valor || valor <= 0)              return "FALLO";
+  if (valor > banda.critico)             return "CRÍTICO";
+  if (valor > banda.advertencia)         return "ADVERTENCIA";
+  if (valor < banda.media - SIGMA_ADVERTENCIA * banda.sigma)
+                                         return "RÁPIDO";
   return "NORMAL";
 };
 

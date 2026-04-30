@@ -2,88 +2,121 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ReferenceLine, Legend, ResponsiveContainer,
 } from "recharts";
-import { C } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
 import { Card, SectionTitle, CustomTooltip, Th, Td, MonoTd } from "../../components/ui";
 import { fmtMin, fmtM } from "../../utils/format";
 import { useDashboard } from "../../context/useDashboard";
 
 // ─── Gráfico de barras diario ─────────────────────────────────────────────────
-const GraficoDiario = ({ dailyData, ejFilter, banda }) => (
-  <Card>
-    <SectionTitle>Tiempo por Día — Comparativa Ejecuciones</SectionTitle>
-    <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={dailyData ?? []} barGap={2}>
-        <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: C.textMuted, fontSize: 9 }} interval={1} angle={-30} textAnchor="end" height={50} />
-        <YAxis tickFormatter={(v) => `${Math.round(v)}m`} tick={{ fill: C.textMuted, fontSize: 11 }} />
-        <Tooltip content={<CustomTooltip />} />
-        <ReferenceLine y={banda?.advertencia ?? 0} stroke={`${C.amber}66`} strokeDasharray="3 3" />
-        <ReferenceLine y={banda?.critico ?? 0}     stroke={`${C.red}44`}   strokeDasharray="3 3" />
-        <Legend wrapperStyle={{ fontSize: 11, color: C.textSub }} />
-        {ejFilter !== "2pm" && <Bar dataKey="ej6am" name="Ejecución 6am" fill={C.blue}  radius={[3, 3, 0, 0]} />}
-        {ejFilter !== "6am" && <Bar dataKey="ej2pm" name="Ejecución 2pm" fill={C.amber} radius={[3, 3, 0, 0]} />}
-      </BarChart>
-    </ResponsiveContainer>
-  </Card>
-);
+const GraficoDiario = ({ dailyData, ejFilter, banda }) => {
+  const { colors: C, theme } = useTheme();
+  return (
+    <Card>
+      <SectionTitle>Tiempo por Día — Comparativa Ejecuciones</SectionTitle>
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={dailyData ?? []} barGap={2}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={C.border}
+            strokeOpacity={theme === "light" ? 0.8 : 0.5}
+            vertical={false}
+          />
+          <XAxis dataKey="label" tick={{ fill: C.textSub, fontSize: 9 }} interval={1} angle={-30} textAnchor="end" height={50} />
+          <YAxis tickFormatter={(v) => `${Math.round(v)}m`} tick={{ fill: C.textSub, fontSize: 11 }} />
+          <Tooltip content={<CustomTooltip />} />
+          <ReferenceLine y={banda?.advertencia ?? 0} stroke={`${C.amber}66`} strokeDasharray="3 3" />
+          <ReferenceLine y={banda?.critico ?? 0}     stroke={`${C.red}44`}   strokeDasharray="3 3" />
+          <Legend wrapperStyle={{ fontSize: 11, color: C.textSub }} />
+          {ejFilter !== "EJ2" && <Bar dataKey="ejEJ1" name="Ejecución 1" fill={C.blue}  radius={[3, 3, 0, 0]} />}
+          {ejFilter !== "EJ1" && <Bar dataKey="ejEJ2" name="Ejecución 2" fill={C.amber} radius={[3, 3, 0, 0]} />}
+        </BarChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+};
 
 // ─── Tabla diaria ─────────────────────────────────────────────────────────────
-const TablaDiaria = ({ dailyData, ejFilter, onRowClick }) => (
-  <Card overflow>
-    <div className="py-4 px-5 border-b border-border">
-      <SectionTitle>Detalle Diario · Clic para expandir</SectionTitle>
-    </div>
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr className="bg-card-alt">
-            {["Fecha","Día","Ejec. 6am","Ejec. 2pm","Δ Entre ejecuciones","Reg. Cargados","Reg. Actualizados","Estado"].map((h) => (
-              <Th key={h}>{h}</Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {(dailyData ?? []).map((diaInfo, i) => (
-            <tr
-              key={i}
-              onClick={() => onRowClick(diaInfo)}
-              className={`border-t border-border cursor-pointer transition-colors hover:bg-card-hover ${diaInfo.tieneFallo ? "bg-quind-red-bg" : "bg-transparent"}`}
-            >
-              <Td>{diaInfo.fecha?.slice(5)}</Td>
-              <Td className="text-text-sub">{diaInfo.dia}{diaInfo.fin_semana ? " 🗓" : ""}</Td>
-              <MonoTd className={`font-semibold ${ejFilter === "2pm" ? "text-text-muted" : "text-quind-blue"}`}>{diaInfo.ej6am != null ? fmtMin(diaInfo.ej6am) : "–"}</MonoTd>
-              <MonoTd className={`font-semibold ${ejFilter === "6am" ? "text-text-muted" : "text-quind-amber"}`}>{diaInfo.ej2pm != null ? fmtMin(diaInfo.ej2pm) : "–"}</MonoTd>
-              <MonoTd className={`text-xs ${diaInfo.deltaTurnos > 30 ? "text-quind-red" : "text-quind-green"}`}>{diaInfo.deltaTurnos != null ? fmtMin(diaInfo.deltaTurnos) : "–"}</MonoTd>
-              <Td>
-                <span style={{
-                  color: C.teal,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 11,
-                }}>
-                  {diaInfo.regCargados ? fmtM(diaInfo.regCargados) : "–"}
-                </span>
-              </Td>
-              <Td>
-                <span style={{
-                  color: diaInfo.regActualizados > 50e6 ? C.red : C.teal,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 11,
-                }}>
-                  {diaInfo.regActualizados ? fmtM(diaInfo.regActualizados) : "–"}
-                </span>
-              </Td>
-              <Td>
-                {diaInfo.tieneFallo
-                  ? <span className="text-quind-red text-[11px]">⚠ Fallo</span>
-                  : <span className="text-quind-teal text-[11px]">✓</span>}
-              </Td>
+const TablaDiaria = ({ dailyData, ejFilter, onRowClick }) => {
+  const { colors: C, theme } = useTheme();
+  return (
+    <Card
+      overflow
+      style={{
+        border: theme === "light" ? `1px solid #c8cdde` : `1px solid ${C.border}`,
+        borderRadius: 12,
+      }}
+    >
+      <div className="py-4 px-5" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <SectionTitle noMargin>Detalle Diario · Clic para expandir</SectionTitle>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[13px]">
+          <thead>
+            <tr style={{ background: C.cardAlt }}>
+              {["Fecha","Día","Ejec. EJ1","Ejec. EJ2","Δ Entre ejecuciones","Reg. Cargados","Reg. Actualizados","Estado"].map((h) => (
+                <Th key={h}>{h}</Th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </Card>
-);
+          </thead>
+          <tbody>
+            {(dailyData ?? []).map((diaInfo, index) => {
+              const isSpecial = diaInfo.tieneFallo;
+              const isAlternate = theme === "light" && index % 2 === 0 && !isSpecial;
+              const rowBg = isSpecial ? C.redBg : (isAlternate ? C.cardAlt : "transparent");
+
+              return (
+                <tr
+                  key={index}
+                  onClick={() => onRowClick(diaInfo)}
+                  className="cursor-pointer transition-colors"
+                  style={{
+                    background: rowBg,
+                    color: C.text
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = isSpecial ? `${C.redBg}EE` : C.cardAlt;
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = rowBg;
+                  }}
+                >
+                  <Td>{diaInfo.fecha?.slice(5)}</Td>
+                  <Td style={{ color: C.textSub }}>{diaInfo.dia}{diaInfo.fin_semana ? " 🗓" : ""}</Td>
+                  <MonoTd style={{ fontWeight: 600, color: ejFilter === "EJ2" ? C.textMuted : C.blue }}>{diaInfo.ejEJ1 != null ? fmtMin(diaInfo.ejEJ1) : "–"}</MonoTd>
+                  <MonoTd style={{ fontWeight: 600, color: ejFilter === "EJ1" ? C.textMuted : C.amber }}>{diaInfo.ejEJ2 != null ? fmtMin(diaInfo.ejEJ2) : "–"}</MonoTd>
+                  <MonoTd style={{ fontSize: 12, color: diaInfo.deltaTurnos > 30 ? C.red : C.green }}>{diaInfo.deltaTurnos != null ? fmtMin(diaInfo.deltaTurnos) : "–"}</MonoTd>
+                  <Td>
+                    <span style={{
+                      color: C.teal,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: 11,
+                    }}>
+                      {diaInfo.regCargados ? fmtM(diaInfo.regCargados) : "–"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span style={{
+                      color: (diaInfo.regActualizados ?? 0) > 50e6 ? C.red : C.teal,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: 11,
+                    }}>
+                      {diaInfo.regActualizados ? fmtM(diaInfo.regActualizados) : "–"}
+                    </span>
+                  </Td>
+                  <Td>
+                    {diaInfo.tieneFallo
+                      ? <span style={{ color: C.red, fontSize: 11 }}>⚠ Fallo</span>
+                      : <span style={{ color: C.teal, fontSize: 11 }}>✓</span>}
+                  </Td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+};
 
 // ─── Feature principal ────────────────────────────────────────────────────────
 export const VistaDia = () => {

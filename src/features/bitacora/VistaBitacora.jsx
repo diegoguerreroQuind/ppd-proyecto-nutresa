@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Card, SectionTitle } from "../../components/ui";
-import { C } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
 import { createAnotacion, deactivateAnotacion } from "../../services/ejecucionesService";
 import { useDashboard } from "../../context/useDashboard";
 
@@ -28,19 +28,8 @@ const daysBetweenInclusive = (start, end) => {
   return diff > 0 ? diff : null;
 };
 
-const tipoColorMap = {
-  info: C.blue,
-  advertencia: C.amber,
-  critico: C.red,
-};
-
-const tipoBadgeMap = {
-  info: "ℹ️ Info",
-  advertencia: "⚠ Advertencia",
-  critico: "🔴 Crítico",
-};
-
 export const VistaBitacora = () => {
+  const { colors: C } = useTheme();
   const { anotacionesData, refresh } = useDashboard();
 
   const [titulo, setTitulo] = useState("");
@@ -51,6 +40,18 @@ export const VistaBitacora = () => {
   const [createdBy, setCreatedBy] = useState("");
   const [saving, setSaving] = useState(false);
   const [archivingId, setArchivingId] = useState(null);
+
+  const tipoColorMap = useMemo(() => ({
+    info: C.blue,
+    advertencia: C.amber,
+    critico: C.red,
+  }), [C]);
+
+  const tipoBadgeMap = {
+    info: "ℹ️ Info",
+    advertencia: "⚠ Advertencia",
+    critico: "🔴 Crítico",
+  };
 
   const orderedAnotaciones = useMemo(
     () => [...(anotacionesData ?? [])].sort((a, b) => (b.fecha_inicio || "").localeCompare(a.fecha_inicio || "")),
@@ -102,45 +103,60 @@ export const VistaBitacora = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card className="p-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-        <SectionTitle>Nueva Anotación</SectionTitle>
+      <Card style={{ padding: "1.25rem", background: C.card, border: `1px solid ${C.border}` }}>
+        <SectionTitle noMargin>Nueva Anotación</SectionTitle>
         <form className="mt-4 flex flex-col gap-4" onSubmit={onSubmit}>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-text-sub">Título *</label>
+            <label className="text-xs" style={{ color: C.textSub }}>Título *</label>
             <input
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               required
               placeholder="Ej: Nueva infraestructura adoptada"
-              className="w-full rounded-lg border border-border bg-card-alt px-3 py-2 text-sm text-text-base outline-none"
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
+              style={{
+                background: C.cardAlt,
+                borderColor: C.border,
+                color: C.text
+              }}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-text-sub">Fecha inicio *</label>
+              <label className="text-xs" style={{ color: C.textSub }}>Fecha inicio *</label>
               <input
                 type="date"
                 value={fechaInicio}
                 onChange={(e) => setFechaInicio(e.target.value)}
                 required
-                className="rounded-lg border border-border bg-card-alt px-3 py-2 text-sm text-text-base outline-none"
+                className="rounded-lg border px-3 py-2 text-sm outline-none"
+                style={{
+                  background: C.cardAlt,
+                  borderColor: C.border,
+                  color: C.text
+                }}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs text-text-sub">Fecha fin</label>
+              <label className="text-xs" style={{ color: C.textSub }}>Fecha fin</label>
               <input
                 type="date"
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
                 placeholder="Opcional"
-                className="rounded-lg border border-border bg-card-alt px-3 py-2 text-sm text-text-base outline-none"
+                className="rounded-lg border px-3 py-2 text-sm outline-none"
+                style={{
+                  background: C.cardAlt,
+                  borderColor: C.border,
+                  color: C.text
+                }}
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-text-sub">Tipo *</label>
+            <label className="text-xs" style={{ color: C.textSub }}>Tipo *</label>
             <div className="flex flex-wrap gap-2">
               {["info", "advertencia", "critico"].map((t) => {
                 const isActive = tipo === t;
@@ -165,23 +181,33 @@ export const VistaBitacora = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-text-sub">Descripción</label>
+            <label className="text-xs" style={{ color: C.textSub }}>Descripción</label>
             <textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               rows={3}
               placeholder="Descripción detallada del evento..."
-              className="w-full rounded-lg border border-border bg-card-alt px-3 py-2 text-sm text-text-base outline-none resize-y"
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none resize-y"
+              style={{
+                background: C.cardAlt,
+                borderColor: C.border,
+                color: C.text
+              }}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-text-sub">Creado por</label>
+            <label className="text-xs" style={{ color: C.textSub }}>Creado por</label>
             <input
               value={createdBy}
               onChange={(e) => setCreatedBy(e.target.value)}
               placeholder="Tu nombre"
-              className="w-full rounded-lg border border-border bg-card-alt px-3 py-2 text-sm text-text-base outline-none"
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
+              style={{
+                background: C.cardAlt,
+                borderColor: C.border,
+                color: C.text
+              }}
             />
           </div>
 
@@ -198,9 +224,9 @@ export const VistaBitacora = () => {
         </form>
       </Card>
 
-      <Card className="p-5">
+      <Card style={{ padding: "1.25rem" }}>
         <div className="flex items-center justify-between gap-3 mb-4">
-          <SectionTitle>Historial de Anotaciones</SectionTitle>
+          <SectionTitle noMargin>Historial de Anotaciones</SectionTitle>
           <span
             className="text-xs px-2.5 py-1 rounded-full border"
             style={{ color: C.textSub, borderColor: C.border2, background: C.cardAlt }}

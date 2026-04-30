@@ -1,7 +1,8 @@
-import { C } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
 
 export const DashboardFooter = () => {
   const currentYear = new Date().getFullYear();
+  const { colors: C } = useTheme();
 
   return (
     <footer

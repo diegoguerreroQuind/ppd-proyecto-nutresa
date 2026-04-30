@@ -14,18 +14,20 @@ import { VistaTendencia }  from "./features/tendencia/VistaTendencia";
 import { VistaVolometria } from "./features/volumetria/VistaVolometria";
 import { VistaFecha }      from "./features/fecha/VistaFecha";
 import { VistaAnalisis }   from "./features/analisis/VistaAnalisis";
+import { VistaBitacora }   from "./features/bitacora/VistaBitacora";
 import { PanelDetalle }    from "./features/detalle/PanelDetalle";
 
-import { C } from "./constants/colors";
+import { useTheme } from "./context/ThemeContext";
 
 // ─── Contenido interno (accede al contexto) ───────────────────────────────────
 const DashboardContent = () => {
   const {
     viewMode, detailData,
     banda, kpis,
-    correlacionesData, correlacionesSpearmanData,
     loading, error, refresh, lastUpdate
   } = useDashboard();
+
+  const { colors: C, theme, toggleTheme } = useTheme();
 
   if (loading) return (
     <div style={{
@@ -95,8 +97,28 @@ const DashboardContent = () => {
   );
 
   return (
-    <div className="min-h-screen bg-bg text-text-base font-sans py-8 px-10">
-      <DashboardHeader lastUpdate={lastUpdate} onRefresh={refresh} />
+    <div
+      className="min-h-screen bg-bg text-text-base font-sans py-8 px-10"
+      style={{
+        background: C.bg,
+        color: C.text,
+        fontFamily: "'Inter','Segoe UI',sans-serif",
+        transition: "background 0.2s ease, color 0.2s ease",
+      }}
+    >
+      <DashboardHeader
+        lastUpdate={lastUpdate}
+        onRefresh={refresh}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+      {theme === "light" && (
+        <div style={{
+          height:     1,
+          background: C.border,
+          margin:     "0 0 8px 0",
+        }} />
+      )}
       <NavBar />
       <KpiRow kpis={kpis} banda={banda} />
 
@@ -112,6 +134,7 @@ const DashboardContent = () => {
           {viewMode === "volumetria" && <VistaVolometria />}
           {viewMode === "fecha"      && <VistaFecha />}
           {viewMode === "analisis"   && <VistaAnalisis />}
+          {viewMode === "bitacora"   && <VistaBitacora />}
         </>
       )}
 

@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
-import { C, ejColor } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
+import { 
+  ejColor as ejColorFn, 
+  nivelColorMap as nivelColorMapFn 
+} from "../../constants/colors";
 import { Badge, Card, SectionTitle, Th, Td } from "../../components/ui";
 import { fmtMin, fmtM, avg } from "../../utils/format";
-import { clasificarNivel, colorDeNivel } from "../../utils/anomalias";
+import { clasificarNivel } from "../../utils/anomalias";
 import { useDashboard } from "../../context/useDashboard";
 import {
   createAnotacion,
@@ -10,42 +14,128 @@ import {
   deactivateAnotacion,
 } from "../../services/ejecucionesService";
 
+const NivelesLeyenda = () => {
+  const { colors: C } = useTheme();
+  const nivelColors = nivelColorMapFn(C);
+
+  return (
+    <div
+      className="px-5 py-4 flex flex-col gap-3"
+      style={{
+        borderTop:  `1px solid ${C.border}`,
+        background: C.cardAlt,
+      }}
+    >
+      <p
+        className="text-[11px] uppercase tracking-widest font-semibold m-0"
+        style={{ color: C.textMuted }}
+      >
+        Significado de alertas
+      </p>
+      <div className="grid gap-2"
+           style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+        {[
+          {
+            nivel: "FALLO",
+            color: C.red,
+            bg:    C.redBg,
+            bdr:   C.redBdr,
+            desc:  "Sin registro de tiempo. Falla o cancelación del proceso.",
+          },
+          {
+            nivel: "CRÍTICO",
+            color: C.red,
+            bg:    C.redBg,
+            bdr:   C.redBdr,
+            desc:  "Supera media + 2σ (30d). Posible impacto operativo.",
+          },
+          {
+            nivel: "ADVERTENCIA",
+            color: C.amber,
+            bg:    `${C.amber}18`,
+            bdr:   `${C.amber}44`,
+            desc:  "Supera media + 1.5σ (30d). Requiere monitoreo.",
+          },
+          {
+            nivel: "NORMAL",
+            color: C.textSub,
+            bg:    `${C.border}88`,
+            bdr:   C.border2,
+            desc:  "Dentro de la banda esperada. Incluido por fallo.",
+          },
+          {
+            nivel: "RÁPIDO",
+            color: C.green,
+            bg:    `${C.green}18`,
+            bdr:   `${C.green}44`,
+            desc:  "Por debajo de media − 1.5σ. Ejecución inusualmente rápida.",
+          },
+        ].map(({ nivel, color, bg, bdr, desc }) => (
+          <div
+            key={nivel}
+            className="flex items-start gap-2.5 rounded-lg p-2.5"
+            style={{ background: bg, border: `1px solid ${bdr}` }}
+          >
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0 mt-0.5 uppercase tracking-wide"
+              style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
+            >
+              {nivel}
+            </span>
+            <span
+              className="text-[11px] leading-relaxed"
+              style={{ color: C.textMuted }}
+            >
+              {desc}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── Tarjeta de stats por ejecución ──────────────────────────────────────────
 const EjecucionCard = ({ ej, kpis }) => {
+  const { colors: C, theme } = useTheme();
   const d7  = kpis[ej]?.["7d"] ?? {};
   const d30 = kpis[ej]?.["30d"] ?? {};
-  const clr = ejColor(ej);
+  const clr = ejColorFn(ej, C);
 
   const stats = [
-    { l: "Promedio",    v: fmtMin(d7.prom),            colorClass: ej === "6am" ? "text-quind-blue" : "text-quind-amber" },
-    { l: "Mínimo",      v: fmtMin(d7.min),             colorClass: "text-quind-green" },
-    { l: "Máximo",      v: fmtMin(d7.max),             colorClass: "text-quind-red"   },
-    { l: "Fallos",      v: d7.fallos ?? 0,             colorClass: d7.fallos > 0 ? "text-quind-red" : "text-quind-green" },
+    { l: "Promedio",    v: fmtMin(d7.prom),            color: ej === "EJ1" ? C.blue : C.amber },
+    { l: "Mínimo",      v: fmtMin(d7.min),             color: C.green },
+    { l: "Máximo",      v: fmtMin(d7.max),             color: C.red   },
+    { l: "Fallos",      v: d7.fallos ?? 0,             color: d7.fallos > 0 ? C.red : C.green },
   ];
 
   const prom7 = d7.prom ?? 0;
   const prom30 = d30.prom ?? 0;
 
+  const boxBg = theme === "light"
+    ? (ej === "EJ1" ? "#f0f4ff" : "#fffbeb")
+    : C.cardAlt;
+
   return (
-    <Card style={{ borderLeft: `3px solid ${clr}` }}>
+    <Card style={{ borderLeft: `3px solid ${clr}`, boxShadow: C.shadow ?? "none" }}>
       <SectionTitle color={clr}>
         Ejecución {ej} — Últimos 7 días
       </SectionTitle>
       <div className="grid grid-cols-3 gap-2.5 mb-3.5">
-        {stats.map(({ l, v, colorClass }) => (
-          <div key={l} className="text-center bg-card-alt rounded-lg py-2.5 px-1.5">
-            <p className="text-[9px] text-text-muted m-0 mb-[3px] uppercase">{l}</p>
-            <p className={`text-base font-bold m-0 ${colorClass}`}>{v}</p>
+        {(stats ?? []).map((stat) => (
+          <div key={stat.l} className="text-center rounded-lg py-2.5 px-1.5" style={{ background: boxBg }}>
+            <p className="text-[9px] m-0 mb-[3px] uppercase" style={{ color: C.textMuted }}>{stat.l}</p>
+            <p className="text-base font-bold m-0" style={{ color: stat.color }}>{stat.v}</p>
           </div>
         ))}
       </div>
-      <div className="pt-3 border-t border-border">
-        <p className="text-[10px] text-text-muted m-0 mb-1.5 uppercase">vs 30 días</p>
+      <div className="pt-3" style={{ borderTop: `1px solid ${C.border}` }}>
+        <p className="text-[10px] m-0 mb-1.5 uppercase" style={{ color: C.textMuted }}>vs 30 días</p>
         <div className="flex gap-2.5">
-          <span className="text-xs text-text-sub">
+          <span className="text-xs" style={{ color: C.textSub }}>
             Prom 30d: <strong style={{ color: clr }}>{fmtMin(prom30)}</strong>
           </span>
-          <span className={`text-xs ${prom7 > prom30 ? "text-quind-red" : "text-quind-green"}`}>
+          <span className="text-xs" style={{ color: prom7 > prom30 ? C.red : C.green }}>
             {prom7 > prom30 ? "↑" : "↓"} {fmtMin(Math.abs(prom7 - prom30))}
           </span>
         </div>
@@ -56,20 +146,20 @@ const EjecucionCard = ({ ej, kpis }) => {
 
 // ─── Comparativa hábiles vs fin de semana ────────────────────────────────────
 const HabilesVsFinSemana = ({ filtered, banda }) => {
+  const { colors: C } = useTheme();
   return (
     <Card>
       <SectionTitle>Hábiles vs Fin de semana</SectionTitle>
       <div className="grid grid-cols-2 gap-4">
         {[false, true].map((esFS) => {
           const data = (filtered ?? []).filter((ejecucion) => ejecucion.es_fin_semana === esFS);
-          const clrClass  = esFS ? "text-quind-amber" : "text-quind-blue";
-          const bgClass   = esFS ? "bg-quind-amber" : "bg-quind-blue";
+          const color     = esFS ? C.amber : C.blue;
           const prom = avg(data.map((ejecucion) => ejecucion.total_min));
           const pico = data.length ? Math.max(...data.map((ejecucion) => ejecucion.total_min)) : 0;
           
           return (
-            <div key={String(esFS)} className="bg-card-alt rounded-lg p-3.5">
-              <p className={`text-[13px] font-bold m-0 mb-2.5 ${clrClass}`}>
+            <div key={String(esFS)} className="rounded-lg p-3.5" style={{ background: C.cardAlt }}>
+              <p className="text-[13px] font-bold m-0 mb-2.5" style={{ color }}>
                 {esFS ? "Fin de semana" : "Días hábiles"}
               </p>
               {[
@@ -79,12 +169,12 @@ const HabilesVsFinSemana = ({ filtered, banda }) => {
                 ["Fallos", data.filter((ejecucion) => !ejecucion.exitoso).length]
               ].map(([l, v]) => (
                 <div key={l} className="flex justify-between mb-1">
-                  <span className="text-xs text-text-muted">{l}</span>
-                  <span className={`text-xs font-bold ${l === "Fallos" && v > 0 ? "text-quind-red" : "text-text-base"}`}>{v}</span>
+                  <span className="text-xs" style={{ color: C.textMuted }}>{l}</span>
+                  <span className="text-xs font-bold" style={{ color: l === "Fallos" && v > 0 ? C.red : C.text }}>{v}</span>
                 </div>
               ))}
-              <div className="mt-2 bg-border rounded h-2 overflow-hidden relative">
-                <div className={`h-full rounded transition-[width] duration-500 ${bgClass}`} style={{ width: `${Math.min(100, (prom / (banda.critico || 1)) * 100)}%` }} />
+              <div className="mt-2 rounded h-2 overflow-hidden relative" style={{ background: C.border }}>
+                <div className="h-full rounded transition-[width] duration-500" style={{ background: color, width: `${Math.min(100, (prom / (banda.critico || 1)) * 100)}%` }} />
               </div>
             </div>
           );
@@ -96,6 +186,7 @@ const HabilesVsFinSemana = ({ filtered, banda }) => {
 
 // ─── Registro de eventos ──────────────────────────────────────────────────────
 const RegistroEventos = ({ anotaciones, refresh }) => {
+  const { colors: C, theme } = useTheme();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -178,17 +269,23 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
     }
   };
 
-  const inputCls = `
-    w-full mt-1.5 rounded-lg px-3 py-2 text-[13px] outline-none
-    border border-border-2 bg-card-alt text-text-base
-    focus:border-quind-blue transition-colors
-  `;
+  const inputCls = "w-full mt-1.5 rounded-lg px-3 py-2 text-[13px] outline-none transition-colors border";
+
+  const getInpStyle = (focused = false) => ({
+    background: C.cardAlt,
+    borderColor: focused ? C.blue : C.border2,
+    color: C.text
+  });
 
   return (
     <>
       <div
         className="rounded-xl overflow-hidden"
-        style={{ background: C.card, border: `1px solid ${C.border}` }}
+        style={{
+          background: C.card,
+          border: theme === "light" ? `1px solid #c8cdde` : `1px solid ${C.border}`,
+          borderRadius: 12,
+        }}
       >
         <div
           className="flex justify-between items-center px-5 py-4"
@@ -225,12 +322,12 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
         ) : (
           <div className="p-3 grid gap-2.5"
                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))" }}>
-            {anotaciones.map(a => {
-              const cfg = tipoConfig[a.tipo] ?? tipoConfig.info;
+        {(anotaciones ?? []).map(anotacion => {
+              const cfg = tipoConfig[anotacion.tipo] ?? tipoConfig.info;
               const color = cfg.color;
               return (
                 <div
-                  key={a.id}
+                  key={anotacion.id}
                   className="rounded-lg p-3.5 flex flex-col gap-1.5"
                   style={{
                     background: C.cardAlt,
@@ -242,18 +339,18 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold"
                             style={{ color: C.text }}>
-                        {a.titulo}
+                        {anotacion.titulo}
                       </span>
                       <span
                         className="text-[11px] font-semibold px-2 py-0.5 rounded"
-                        style={{ color, background: `${color}22` }}
+                        style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
                       >
                         {cfg.label}
                       </span>
-                      {a.es_hoy && (
+                      {anotacion.es_hoy && (
                         <span
                           className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                          style={{ color: C.green, background: `${C.green}22` }}
+                          style={{ color: C.green, background: `${C.green}18`, border: `1px solid ${C.green}44` }}
                         >
                           Hoy
                         </span>
@@ -261,14 +358,14 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
                     </div>
                     <div className="flex gap-1.5 shrink-0">
                       <button
-                        onClick={() => openEdit(a)}
+                        onClick={() => openEdit(anotacion)}
                         className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent transition-opacity hover:opacity-70"
                         style={{ borderColor: C.border2, color: C.blue }}
                       >
                         Editar
                       </button>
                       <button
-                        onClick={() => handleArchive(a.id)}
+                        onClick={() => handleArchive(anotacion.id)}
                         className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent transition-opacity hover:opacity-70"
                         style={{ borderColor: C.border2, color: C.textMuted }}
                       >
@@ -284,20 +381,20 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
                       fontFamily: "'IBM Plex Mono', monospace",
                     }}
                   >
-                    {a.fecha_inicio}
-                    {a.fecha_fin ? ` → ${a.fecha_fin} (${a.duracion_dias} días)` : ""}
+                    {anotacion.fecha_inicio}
+                    {anotacion.fecha_fin ? ` → ${anotacion.fecha_fin} (${anotacion.duracion_dias} días)` : ""}
                   </span>
 
-                  {a.descripcion && (
+                  {anotacion.descripcion && (
                     <p className="text-[13px] italic m-0"
                        style={{ color: C.textSub }}>
-                      {a.descripcion}
+                      {anotacion.descripcion}
                     </p>
                   )}
 
                   <span className="text-[11px]" style={{ color: C.textDim }}>
-                    {a.created_by ? `Registrado por: ${a.created_by} · ` : ""}
-                    {new Date(a.created_at).toLocaleDateString("es-CO")}
+                    {anotacion.created_by ? `Registrado por: ${anotacion.created_by} · ` : ""}
+                    {new Date(anotacion.created_at).toLocaleDateString("es-CO")}
                   </span>
                 </div>
               );
@@ -334,9 +431,16 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
               </label>
               <input
                 className={inputCls}
+                style={getInpStyle()}
                 value={form.titulo}
                 onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
                 placeholder="Ej: Nueva infraestructura adoptada"
+                onFocus={(e) => {
+                  e.target.style.borderColor = C.blue;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = C.border2;
+                }}
               />
             </div>
 
@@ -349,8 +453,15 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
                 <input
                   type="date"
                   className={inputCls}
+                  style={getInpStyle()}
                   value={form.fecha_inicio}
                   onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = C.blue;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = C.border2;
+                  }}
                 />
               </div>
               <div>
@@ -361,8 +472,15 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
                 <input
                   type="date"
                   className={inputCls}
+                  style={getInpStyle()}
                   value={form.fecha_fin}
                   onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = C.blue;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = C.border2;
+                  }}
                 />
               </div>
             </div>
@@ -398,11 +516,17 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
               </label>
               <textarea
                 className={`${inputCls} resize-y`}
+                style={getInpStyle()}
                 rows={3}
                 value={form.descripcion}
                 onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
                 placeholder="Descripción detallada del evento..."
-                style={{ fontFamily: "inherit" }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = C.blue;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = C.border2;
+                }}
               />
             </div>
 
@@ -413,9 +537,16 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
               </label>
               <input
                 className={inputCls}
+                style={getInpStyle()}
                 value={form.created_by}
                 onChange={e => setForm(f => ({ ...f, created_by: e.target.value }))}
                 placeholder="Tu nombre"
+                onFocus={(e) => {
+                  e.target.style.borderColor = C.blue;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = C.border2;
+                }}
               />
             </div>
 
@@ -457,8 +588,17 @@ const RegistroEventos = ({ anotaciones, refresh }) => {
 
 // ─── Tabla de alertas recientes ───────────────────────────────────────────────
 const AlertasTable = ({ filtered, banda, anotaciones }) => {
+  const { colors: C, theme } = useTheme();
+  const nivelColors = nivelColorMapFn(C);
+
   const alertasAutomaticas = useMemo(
-    () => (filtered ?? []).filter((d) => !d.exitoso || d.total_min > banda.advertencia),
+    () =>
+      (filtered ?? []).filter(
+        (d) =>
+          !d.exitoso ||
+          (!d.total_min || d.total_min <= 0) ||
+          d.total_min > banda.advertencia
+      ),
     [filtered, banda]
   );
   const eventosImportantes = useMemo(
@@ -470,9 +610,15 @@ const AlertasTable = ({ filtered, banda, anotaciones }) => {
   if (totalAlertas === 0) return null;
 
   return (
-    <Card overflow>
-      <div className="py-4 px-5 border-b border-border flex justify-between items-center">
-        <SectionTitle>⚠ Alertas recientes</SectionTitle>
+    <Card
+      overflow
+      style={{
+        border: theme === "light" ? `1px solid #c8cdde` : `1px solid ${C.border}`,
+        borderRadius: 12,
+      }}
+    >
+      <div className="py-4 px-5 flex justify-between items-center" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <SectionTitle noMargin>⚠ Alertas recientes</SectionTitle>
         <Badge label={`${totalAlertas} alertas`} color={C.red} />
       </div>
       {eventosImportantes.length > 0 && (
@@ -504,7 +650,7 @@ const AlertasTable = ({ filtered, banda, anotaciones }) => {
                     </span>
                     <span
                       className="text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase"
-                      style={{ color, background: `${color}22` }}
+                      style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
                     >
                       {a.tipo}
                     </span>
@@ -534,33 +680,39 @@ const AlertasTable = ({ filtered, banda, anotaciones }) => {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
-            <tr className="bg-card-alt">
+            <tr style={{ background: C.cardAlt }}>
               {["Fecha","Día","Ejecución","Tiempo","vs Media","Reg. Actualizados","Reg. Cargados","Nivel"].map((h) => (
                 <Th key={h}>{h}</Th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {alertasAutomaticas.map((ejecucion, i) => {
-              const nivel = clasificarNivel(ejecucion.total_min, banda);
-              const diff  = ejecucion.total_min - banda.media;
+            {(alertasAutomaticas ?? []).map((ejecucion, index) => {
+              const nivel = clasificarNivel(
+                ejecucion.total_min,
+                banda,
+                ejecucion.exitoso
+              );
+              const diff  = ejecucion.total_min - (banda?.media ?? 0);
+              const colorNivel = nivelColors[nivel] ?? C.textSub;
+
               return (
-                <tr key={i} className="border-t border-border bg-quind-red-bg">
+                <tr key={index} style={{ background: C.redBg }}>
                   <Td>{ejecucion.fecha?.slice(5)}</Td>
-                  <Td className="text-text-sub">{ejecucion.dia_semana}</Td>
-                  <Td className="font-bold" style={{ color: ejColor(ejecucion.turno) }}>{ejecucion.turno}</Td>
-                  <Td className="font-bold text-quind-red">{fmtMin(ejecucion.total_min)}</Td>
-                  <Td className="text-[11px] text-quind-red">{diff > 0 ? "+" : ""}{fmtMin(diff)}</Td>
+                  <Td style={{ color: C.textSub }}>{ejecucion.dia_semana}</Td>
+                  <Td className="font-bold" style={{ color: ejColorFn(ejecucion.turno, C) }}>{ejecucion.turno}</Td>
+                  <Td className="font-bold" style={{ color: C.red }}>{fmtMin(ejecucion.total_min)}</Td>
+                  <Td className="text-[11px]" style={{ color: C.red }}>{diff > 0 ? "+" : ""}{fmtMin(diff)}</Td>
                   <Td>
                     <span style={{
-                      color: ejecucion.registros_actualizados > 50e6
+                      color: (ejecucion.registros_actualizados ?? 0) > 50e6
                         ? C.red
                         : ejecucion.registros_actualizados
                           ? C.teal
                           : C.textDim,
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontSize: 12,
-                      fontWeight: ejecucion.registros_actualizados > 50e6 ? 700 : 400,
+                      fontWeight: (ejecucion.registros_actualizados ?? 0) > 50e6 ? 700 : 400,
                     }}>
                       {ejecucion.registros_actualizados ? fmtM(ejecucion.registros_actualizados) : "–"}
                     </span>
@@ -574,38 +726,35 @@ const AlertasTable = ({ filtered, banda, anotaciones }) => {
                       {ejecucion.registros_cargados ? fmtM(ejecucion.registros_cargados) : "–"}
                     </span>
                   </Td>
-                  <Td><Badge label={nivel} color={colorDeNivel(nivel)} /></Td>
+                  <Td>
+                    <span
+                      style={{
+                        background:
+                          nivel === "FALLO"
+                            ? C.redBg
+                            : `${colorNivel}18`,
+                        color: colorNivel,
+                        border:
+                          nivel === "FALLO"
+                            ? `1px solid ${C.redBdr}`
+                            : `1px solid ${colorNivel}44`,
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {nivel === "FALLO" ? "FALLO" : nivel}
+                    </span>
+                  </Td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <div className="px-5 py-3.5 flex flex-col gap-2" style={{ borderTop: `1px solid ${C.border}`, background: C.cardAlt }}>
-        <p className="text-[11px] m-0 uppercase tracking-[1px] font-semibold" style={{ color: C.textMuted }}>
-          Significado de niveles
-        </p>
-        <div className="flex flex-wrap gap-4">
-          {[
-            { nivel: "CRÍTICO", color: C.red, desc: "Tiempo supera la media + 2σ (30d). Posible impacto operativo." },
-            { nivel: "ADVERTENCIA", color: C.amber, desc: "Tiempo supera la media + 1.5σ (30d). Requiere monitoreo." },
-            { nivel: "NORMAL", color: C.textSub, desc: "Tiempo dentro de la banda esperada pero incluido por fallo en el proceso." },
-            { nivel: "RÁPIDO", color: C.green, desc: "Tiempo por debajo de la media − 1.5σ. Ejecución inusualmente rápida." },
-          ].map(({ nivel, color, desc }) => (
-            <div key={nivel} className="flex items-start gap-2 min-w-[200px] flex-1">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded whitespace-nowrap mt-px" style={{
-                color,
-                background: `${color}22`,
-              }}>
-                {nivel}
-              </span>
-              <span className="text-[11px] leading-normal" style={{ color: C.textMuted }}>
-                {desc}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <NivelesLeyenda />
     </Card>
   );
 };
@@ -613,7 +762,7 @@ const AlertasTable = ({ filtered, banda, anotaciones }) => {
 // ─── Feature principal ────────────────────────────────────────────────────────
 export const VistaResumen = () => {
   const { ejFilter, filtered, kpis, banda, anotacionesData, refresh } = useDashboard();
-  const ejecuciones = ejFilter === "ambos" ? ["6am", "2pm"] : [ejFilter];
+  const ejecuciones = ejFilter === "ambos" ? ["EJ1", "EJ2"] : [ejFilter];
 
   return (
     <div className="flex flex-col gap-5">

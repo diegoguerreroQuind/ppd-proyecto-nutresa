@@ -1,6 +1,6 @@
 import { KpiCard } from "./index";
 import { fmtMin, fmtM } from "../../utils/format";
-import { C } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
 
 /**
  * KpiRow
@@ -10,41 +10,43 @@ import { C } from "../../constants/colors";
  * No calcula nada: solo formatea y presenta.
  */
 export const KpiRow = ({ kpis, banda }) => {
-  const fallos7d = kpis["6am"]["7d"].fallos + kpis["2pm"]["7d"].fallos;
-  const maxReg30d = Math.max(kpis["6am"]["30d"].maxReg, kpis["2pm"]["30d"].maxReg);
+  const { colors: C } = useTheme();
+
+  const fallos7d = kpis["EJ1"]["7d"].fallos + kpis["EJ2"]["7d"].fallos;
+  const maxReg30d = Math.max(kpis["EJ1"]["30d"].maxReg, kpis["EJ2"]["30d"].maxReg);
   const maxRegAct30d = Math.max(
-    kpis["6am"]["30d"].maxRegAct ?? 0,
-    kpis["2pm"]["30d"].maxRegAct ?? 0
+    kpis["EJ1"]["30d"].maxRegAct ?? 0,
+    kpis["EJ2"]["30d"].maxRegAct ?? 0
   );
 
   const cards = [
     {
-      label: "Ejec. 6am · 7 días",
-      value: fmtMin(kpis["6am"]["7d"].prom),
-      sub: `Promedio · Tasa éxito: ${kpis["6am"]["7d"].tasa}%`,
+      label: "Promedio. EJ1 · 7 días",
+      value: fmtMin(kpis["EJ1"]["7d"].prom),
+      sub: `Promedio · Tasa éxito: ${kpis["EJ1"]["7d"].tasa}%`,
       color: C.blue,
-      tooltip: "Tiempo promedio de ejecución del turno 6am durante los últimos 7 días.",
+      tooltip: "Tiempo promedio de ejecución del turno EJ1 durante los últimos 7 días.",
     },
     {
-      label: "Ejec. 2pm · 7 días",
-      value: fmtMin(kpis["2pm"]["7d"].prom),
-      sub: `Promedio · Tasa éxito: ${kpis["2pm"]["7d"].tasa}%`,
+      label: "Promedio. EJ2 · 7 días",
+      value: fmtMin(kpis["EJ2"]["7d"].prom),
+      sub: `Promedio · Tasa éxito: ${kpis["EJ2"]["7d"].tasa}%`,
       color: C.amber,
-      tooltip: "Tiempo promedio de ejecución del turno 2pm durante los últimos 7 días.",
+      tooltip: "Tiempo promedio de ejecución del turno EJ2 durante los últimos 7 días.",
     },
     {
-      label: "Tasa éxito 6am · 30d",
-      value: `${kpis["6am"]["30d"].tasa}%`,
-      sub: "Ejecución mañana reciente",
+      label: "Tasa éxito EJ1 · 30d",
+      value: `${kpis["EJ1"]["30d"].tasa}%`,
+      sub: "Ejecución 1 (mañana)",
       color: C.green,
-      tooltip: "Porcentaje de ejecuciones del turno 6am que finalizaron sin errores en los últimos 30 días.",
+      tooltip: "Porcentaje de ejecuciones del turno EJ1 que finalizaron sin errores en los últimos 30 días.",
     },
     {
-      label: "Tasa éxito 2pm · 30d",
-      value: `${kpis["2pm"]["30d"].tasa}%`,
-      sub: "Ejecución tarde reciente",
+      label: "Tasa éxito EJ2 · 30d",
+      value: `${kpis["EJ2"]["30d"].tasa}%`,
+      sub: "Ejecución 2 (tarde)",
       color: C.teal,
-      tooltip: "Porcentaje de ejecuciones del turno 2pm que finalizaron sin errores en los últimos 30 días.",
+      tooltip: "Porcentaje de ejecuciones del turno EJ2 que finalizaron sin errores en los últimos 30 días.",
     },
     {
       label: "Umbral advertencia",
@@ -85,7 +87,7 @@ export const KpiRow = ({ kpis, banda }) => {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-      {cards.map((card) => (
+      {(cards ?? []).map((card) => (
         <KpiCard key={card.label} {...card} />
       ))}
     </div>

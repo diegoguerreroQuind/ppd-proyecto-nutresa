@@ -10,7 +10,7 @@ import { useDailyData }  from "../hooks/useDailyData";
 
 // ─── Estado inicial ───────────────────────────────────────────────────────────
 const initialState = {
-  ejFilter:     "ambos",    // "ambos" | "6am" | "2pm"
+  ejFilter:     "ambos",    // "ambos" | "EJ1" | "EJ2"
   viewMode:     "resumen",  // tab activo
   detailData:   null,       // { type: "semana"|"dia", data: {...} } | null
   selectedDate: "",         // fecha seleccionada en vista "Por Fecha"
@@ -56,8 +56,8 @@ export const DashboardProvider = ({ children }) => {
 
   const filtered = useMemo(
     () => state.ejFilter === "ambos"
-      ? rawData
-      : (rawData ?? []).filter(d => d.turno === state.ejFilter),
+      ? (rawData ?? [])
+      : (rawData ?? []).filter(ejecucion => ejecucion.turno === state.ejFilter),
     [rawData, state.ejFilter]
   );
 
@@ -68,11 +68,11 @@ export const DashboardProvider = ({ children }) => {
   const dailyData  = useDailyData(rawData, state.ejFilter);
 
   // Actions wrapped in useCallback
-  const setEjFilter     = useCallback((ej)   => dispatch({ type: "SET_EJ_FILTER",     payload: ej }), []);
-  const setViewMode     = useCallback((tab)  => dispatch({ type: "SET_VIEW_MODE",     payload: tab }), []);
-  const setDetail       = useCallback((data) => dispatch({ type: "SET_DETAIL",        payload: data }), []);
-  const clearDetail     = useCallback(()     => dispatch({ type: "CLEAR_DETAIL" }), []);
-  const setSelectedDate = useCallback((date) => dispatch({ type: "SET_SELECTED_DATE", payload: date }), []);
+  const setEjFilter     = useCallback((ej)     => dispatch({ type: "SET_EJ_FILTER",     payload: ej }), []);
+  const setViewMode     = useCallback((tab)    => dispatch({ type: "SET_VIEW_MODE",     payload: tab }), []);
+  const setDetail       = useCallback((detail) => dispatch({ type: "SET_DETAIL",        payload: detail }), []);
+  const clearDetail     = useCallback(()       => dispatch({ type: "CLEAR_DETAIL" }), []);
+  const setSelectedDate = useCallback((date)   => dispatch({ type: "SET_SELECTED_DATE", payload: date }), []);
 
   const value = useMemo(() => ({
     ...state,

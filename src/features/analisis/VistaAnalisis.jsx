@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { C } from "../../constants/colors";
+import { useTheme } from "../../context/ThemeContext";
 import { Card, SectionTitle, Th, Td } from "../../components/ui";
 import { useDashboard } from "../../context/useDashboard";
 
-const getCorrMeta = (value) => {
+const getCorrMeta = (value, C) => {
   const absVal = Math.abs(Number(value) || 0);
   if (absVal >= 0.7) return { color: C.green, label: "Fuerte" };
   if (absVal >= 0.4) return { color: C.amber, label: "Moderada" };
@@ -28,40 +28,40 @@ const CORR_ROWS = [
   { label: "Reg. Actualizados → Tiempo Indirecto", key: "actualizados_indirecto" },
 ];
 
-const CorrelationTable = ({ title, prefix, data2pm, data6am }) => {
-  const n2pm = Number(data2pm?.n_registros) || 14;
-  const n6am = Number(data6am?.n_registros) || 15;
+const CorrelationTable = ({ title, prefix, dataEJ2, dataEJ1 }) => {
+  const { colors: C } = useTheme();
+  const nEJ2 = Number(dataEJ2?.n_registros) || 14;
+  const nEJ1 = Number(dataEJ1?.n_registros) || 15;
 
   return (
     <Card overflow>
-      <div className="py-4 px-5 border-b border-border">
-        <SectionTitle>{title}</SectionTitle>
+      <div className="py-4 px-5" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <SectionTitle noMargin>{title}</SectionTitle>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
-            <tr className="bg-card-alt">
+            <tr style={{ background: C.cardAlt }}>
               <Th>Variable</Th>
-              <Th>Turno 2pm (n={n2pm} observaciones)</Th>
-              <Th>Turno 6am (n={n6am} observaciones)</Th>
+              <Th>Turno EJ2 (n={nEJ2} observaciones)</Th>
+              <Th>Turno EJ1 (n={nEJ1} observaciones)</Th>
             </tr>
           </thead>
           <tbody>
             {CORR_ROWS.map((row) => {
               const key = `${prefix}_${row.key}`;
-              const v2 = data2pm?.[key];
-              const v6 = data6am?.[key];
-              const m2 = getCorrMeta(v2);
-              const m6 = getCorrMeta(v6);
+              const v2 = dataEJ2?.[key];
+              const v6 = dataEJ1?.[key];
+              const m2 = getCorrMeta(v2, C);
+              const m6 = getCorrMeta(v6, C);
 
               return (
-                <tr key={key} className="border-t border-border">
-                  <Td className="text-text-sub">{row.label}</Td>
+                <tr key={key} style={{ borderTop: `1px solid ${C.border}` }}>
+                  <Td style={{ color: C.textSub }}>{row.label}</Td>
                   <Td>
                     <div className="flex items-center gap-2">
                       <span
-                        className="text-text-base"
-                        style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+                        style={{ color: C.text, fontFamily: "'IBM Plex Mono', monospace" }}
                       >
                         {fmtCorr(v2)}
                       </span>
@@ -76,8 +76,7 @@ const CorrelationTable = ({ title, prefix, data2pm, data6am }) => {
                   <Td>
                     <div className="flex items-center gap-2">
                       <span
-                        className="text-text-base"
-                        style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+                        style={{ color: C.text, fontFamily: "'IBM Plex Mono', monospace" }}
                       >
                         {fmtCorr(v6)}
                       </span>
@@ -100,16 +99,17 @@ const CorrelationTable = ({ title, prefix, data2pm, data6am }) => {
 };
 
 const ScatterCorrTooltip = ({ active, payload }) => {
+  const { colors: C } = useTheme();
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   return (
-    <div className="bg-card border border-border-2 rounded-lg px-3.5 py-2.5 text-xs">
-      <p className="text-text-sub m-0 mb-1">Turno: {d?.turno ?? "–"}</p>
-      <p className="text-text-base m-0 mb-0.5">
+    <div className="rounded-lg px-3.5 py-2.5 text-xs border" style={{ background: C.card, borderColor: C.border2 }}>
+      <p className="m-0 mb-1" style={{ color: C.textSub }}>Turno: {d?.turno ?? "–"}</p>
+      <p className="m-0 mb-0.5" style={{ color: C.text }}>
         Registros actualizados:{" "}
         <strong style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{d?.regM ?? "–"}M</strong>
       </p>
-      <p className="text-text-base m-0">
+      <p className="m-0" style={{ color: C.text }}>
         Tiempo total:{" "}
         <strong style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{d?.total_min ?? "–"} min</strong>
       </p>
@@ -124,39 +124,40 @@ export const VistaAnalisis = () => {
     correlacionesData,
     correlacionesSpearmanData,
   } = useDashboard();
+  const { colors: C } = useTheme();
 
-  const pearson2pm = useMemo(
-    () => (correlacionesData ?? []).find((d) => d.turno === "2pm") ?? {},
+  const pearsonEJ2 = useMemo(
+    () => (correlacionesData ?? []).find((corr) => corr.turno === "EJ2") ?? {},
     [correlacionesData]
   );
-  const pearson6am = useMemo(
-    () => (correlacionesData ?? []).find((d) => d.turno === "6am") ?? {},
+  const pearsonEJ1 = useMemo(
+    () => (correlacionesData ?? []).find((corr) => corr.turno === "EJ1") ?? {},
     [correlacionesData]
   );
-  const spearman2pm = useMemo(
-    () => (correlacionesSpearmanData ?? []).find((d) => d.turno === "2pm") ?? {},
+  const spearmanEJ2 = useMemo(
+    () => (correlacionesSpearmanData ?? []).find((corr) => corr.turno === "EJ2") ?? {},
     [correlacionesSpearmanData]
   );
-  const spearman6am = useMemo(
-    () => (correlacionesSpearmanData ?? []).find((d) => d.turno === "6am") ?? {},
+  const spearmanEJ1 = useMemo(
+    () => (correlacionesSpearmanData ?? []).find((corr) => corr.turno === "EJ1") ?? {},
     [correlacionesSpearmanData]
   );
 
   const scatterData = useMemo(() => {
-    const base = (rawData ?? []).filter((d) => d.registros_actualizados != null);
-    const filtered = ejFilter === "ambos" ? base : base.filter((d) => d.turno === ejFilter);
-    return filtered.map((d) => ({
-      ...d,
-      regM: +(Number(d.registros_actualizados) / 1e6).toFixed(2),
+    const base = (rawData ?? []).filter((ejecucion) => ejecucion.registros_actualizados != null);
+    const filtered = ejFilter === "ambos" ? base : base.filter((ejecucion) => ejecucion.turno === ejFilter);
+    return filtered.map((ejecucion) => ({
+      ...ejecucion,
+      regM: +(Number(ejecucion.registros_actualizados) / 1e6).toFixed(2),
     }));
   }, [rawData, ejFilter]);
 
-  const scatter6am = useMemo(
-    () => scatterData.filter((d) => d.turno === "6am"),
+  const scatterEJ1 = useMemo(
+    () => scatterData.filter((item) => item.turno === "EJ1"),
     [scatterData]
   );
-  const scatter2pm = useMemo(
-    () => scatterData.filter((d) => d.turno === "2pm"),
+  const scatterEJ2 = useMemo(
+    () => scatterData.filter((item) => item.turno === "EJ2"),
     [scatterData]
   );
 
@@ -176,7 +177,7 @@ export const VistaAnalisis = () => {
             Spearman (0.613), más robusta que Pearson (0.167). Los registros actualizados tienen
             impacto moderado en los tiempos (Spearman: 0.433).
           </p>
-          <p className="m-0 text-text-sub">
+          <p className="m-0" style={{ color: C.textSub }}>
             Cuando Pearson y Spearman difieren significativamente existe un outlier que infla la
             correlación lineal. Spearman es más confiable para este tipo de datos operativos.
           </p>
@@ -186,20 +187,20 @@ export const VistaAnalisis = () => {
       <CorrelationTable
         title="Correlaciones Pearson"
         prefix="pearson"
-        data2pm={pearson2pm}
-        data6am={pearson6am}
+        dataEJ2={pearsonEJ2}
+        dataEJ1={pearsonEJ1}
       />
 
       <CorrelationTable
         title="Correlaciones Spearman"
         prefix="spearman"
-        data2pm={spearman2pm}
-        data6am={spearman6am}
+        dataEJ2={spearmanEJ2}
+        dataEJ1={spearmanEJ1}
       />
 
       <Card>
         <SectionTitle>Scatter — Registros actualizados vs tiempo total</SectionTitle>
-        <p className="text-xs text-text-muted -mt-2.5 mb-3.5">
+        <p className="text-xs -mt-2.5 mb-3.5" style={{ color: C.textMuted }}>
           Eje X: registros actualizados (M) · Eje Y: tiempo total (min)
         </p>
         <ResponsiveContainer width="100%" height={300}>
@@ -219,11 +220,11 @@ export const VistaAnalisis = () => {
             />
             <Tooltip content={<ScatterCorrTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11, color: C.textSub }} />
-            {ejFilter !== "2pm" && (
-              <Scatter name="Turno 6am" data={scatter6am} fill={C.blue} />
+            {ejFilter !== "EJ2" && (
+              <Scatter name="Turno EJ1" data={scatterEJ1} fill={C.blue} />
             )}
-            {ejFilter !== "6am" && (
-              <Scatter name="Turno 2pm" data={scatter2pm} fill={C.amber} />
+            {ejFilter !== "EJ1" && (
+              <Scatter name="Turno EJ2" data={scatterEJ2} fill={C.amber} />
             )}
           </ScatterChart>
         </ResponsiveContainer>

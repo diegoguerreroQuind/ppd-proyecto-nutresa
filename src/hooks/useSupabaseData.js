@@ -10,6 +10,7 @@ import {
   fetchCorrelaciones,
   fetchCorrelacionesSpearman,
   fetchAnotaciones,
+  createAnotacion,
 } from '../services/ejecucionesService';
 
 export const useSupabaseData = () => {
@@ -58,6 +59,37 @@ export const useSupabaseData = () => {
       setCorrelacionesSpearmanData(correlacionesSpearman ?? []);
       setAnotacionesData(anotaciones ?? []);
       setLastUpdate(new Date());
+
+      // ─── Auto-crear anotaciones por fallos ──────────────────────────────────
+      try {
+        const incompletas = (raw ?? []).filter(ej => 
+          !ej.exitoso && (!ej.total_min || ej.total_min <= 0)
+        );
+
+        let creadas = 0;
+        for (const ej of incompletas) {
+          const yaExiste = (anotaciones ?? []).some(a => 
+            a.fecha_inicio === ej.fecha && a.titulo.includes(ej.turno)
+          );
+
+          if (!yaExiste) {
+            await createAnotacion({
+              fecha_inicio: ej.fecha,
+              fecha_fin:    null,
+              titulo:       `Falla en ejecución ${ej.turno} — ${ej.fecha}`,
+              descripcion:  ej.notas
+                              ? ej.notas
+                              : "Ejecución no completada. No se registraron tiempos de proceso.",
+              tipo:         "critico",
+              created_by:   "Equipo Quind",
+            });
+            creadas++;
+          }
+        }
+        if (creadas > 0) loadAll();
+      } catch (annoErr) {
+        console.error('Error auto-creating annotations:', annoErr);
+      }
     } catch (err) {
       console.error('Error fetching Supabase data:', err);
       setError(err.message);

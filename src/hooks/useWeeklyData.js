@@ -2,50 +2,51 @@ import { useMemo } from "react";
 import { avg } from "../utils/format";
 
 /**
- * useWeeklyData
- *
- * Agrupa las ejecuciones por semana y calcula métricas por semana.
- * El filtro de ejecución controla qué líneas se muestran en el gráfico
- * pero ambas series siempre se calculan para la tabla comparativa.
+ * Hook para procesar datos semanales agrupando ejecuciones.
  */
-export const useWeeklyData = (rawData, ejFilter) => {
-  return useMemo(() => {
-    const map = {};
-
-    (rawData ?? []).forEach((ejecucion) => {
-      if (!map[ejecucion.semana]) {
-        map[ejecucion.semana] = { semana: ejecucion.semana, all: [], f: [] };
-      }
-      map[ejecucion.semana].all.push(ejecucion);
-      if (ejFilter === "ambos" || ejecucion.turno === ejFilter || ejecucion.ejecucion === ejFilter) {
-        map[ejecucion.semana].f.push(ejecucion);
-      }
+export const useWeeklyData = (rawData, ejFilter) =>
+  useMemo(() => {
+    const semanaMap = {};
+    (rawData ?? []).forEach(ejecucion => {
+      if (!semanaMap[ejecucion.semana])
+        semanaMap[ejecucion.semana] = { semana: ejecucion.semana, all: [], filtered: [] };
+      
+      semanaMap[ejecucion.semana].all.push(ejecucion);
+      
+      if (ejFilter === "ambos" || ejecucion.turno === ejFilter)
+        semanaMap[ejecucion.semana].filtered.push(ejecucion);
     });
 
-    return Object.values(map).map(({ semana, all, f }) => {
-      const regs = f.filter((ejecucion) => ejecucion.registros_cargados != null).map((ejecucion) => ejecucion.registros_cargados);
-      const ej6  = all.filter((ejecucion) => (ejecucion.turno || ejecucion.ejecucion) === "6am");
-      const ej2  = all.filter((ejecucion) => (ejecucion.turno || ejecucion.ejecucion) === "2pm");
+    return Object.values(semanaMap).map(({ semana, all, filtered }) => {
+      const validos    = filtered.filter(ej => ej.total_min && ej.total_min > 0);
+      const ej1        = all.filter(ej => ej.turno === "EJ1");
+      const ej2        = all.filter(ej => ej.turno === "EJ2");
+      const validosEJ1 = ej1.filter(ej => ej.total_min && ej.total_min > 0);
+      const validosEJ2 = ej2.filter(ej => ej.total_min && ej.total_min > 0);
+      
+      const regs       = filtered.filter(ej => ej.registros_cargados)
+                           .map(ej => ej.registros_cargados);
+      const regsAct    = filtered.filter(ej => ej.registros_actualizados)
+                           .map(ej => ej.registros_actualizados);
 
       return {
         semana,
-        // Series del gráfico: null cuando el filtro las excluye
-        prom6am:     ejFilter !== "2pm" && ej6.length ? avg(ej6.map((ejecucion) => ejecucion.total_min)) : null,
-        prom2pm:     ejFilter !== "6am" && ej2.length ? avg(ej2.map((ejecucion) => ejecucion.total_min)) : null,
-        promTotal:   avg(f.map((ejecucion) => ejecucion.total_min)),
-        minTotal:    f.length ? Math.min(...f.map((ejecucion) => ejecucion.total_min)) : null,
-        maxTotal:    f.length ? Math.max(...f.map((ejecucion) => ejecucion.total_min)) : null,
-        ejecuciones: f.length,
-        picoReg:     regs.length ? Math.max(...regs) : null,
-        picoRegAct:  f.filter((ejecucion) => ejecucion.registros_actualizados)
-          .length
-          ? Math.max(...f
-              .filter((ejecucion) => ejecucion.registros_actualizados)
-              .map((ejecucion) => ejecucion.registros_actualizados))
-          : null,
-        fallos:      f.filter((ejecucion) => !ejecucion.exitoso).length,
-        items:       f,
+        promEJ1:     ejFilter !== "EJ2" && validosEJ1.length
+                       ? avg(validosEJ1.map(ej => ej.total_min)) : null,
+        promEJ2:     ejFilter !== "EJ1" && validosEJ2.length
+                       ? avg(validosEJ2.map(ej => ej.total_min)) : null,
+        promTotal:   avg(validos.map(ej => ej.total_min)),
+        minTotal:    validos.length
+                       ? Math.min(...validos.map(ej => ej.total_min)) : null,
+        maxTotal:    validos.length
+                       ? Math.max(...validos.map(ej => ej.total_min)) : null,
+        pctDir:      avg(validos.map(
+                       ej => (ej.total_min ? (ej.directo_min / ej.total_min * 100) : 0))),
+        ejecuciones: filtered.length,
+        picoReg:     regs.length    ? Math.max(...regs)    : null,
+        picoRegAct:  regsAct.length ? Math.max(...regsAct) : null,
+        fallos:      filtered.filter(ej => !ej.exitoso).length,
+        items:       filtered,
       };
     });
   }, [rawData, ejFilter]);
-};
