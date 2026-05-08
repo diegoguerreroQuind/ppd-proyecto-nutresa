@@ -62,24 +62,32 @@ export const useSupabaseData = () => {
 
       // ─── Auto-crear anotaciones por fallos ──────────────────────────────────
       try {
-        const incompletas = (raw ?? []).filter(ej => 
-          !ej.exitoso && (!ej.total_min || ej.total_min <= 0)
-        );
+        // Detect ALL failed executions regardless of
+        // whether they have a total_min value or not
+        const ejecucionesFallidas = (raw ?? []).filter(d => !d.exitoso);
 
         let creadas = 0;
-        for (const ej of incompletas) {
-          const yaExiste = (anotaciones ?? []).some(a => 
-            a.fecha_inicio === ej.fecha && a.titulo.includes(ej.turno)
+        for (const ejecucion of ejecucionesFallidas) {
+          const yaExiste = (anotaciones ?? []).some(a =>
+            a.fecha_inicio === ejecucion.fecha &&
+            a.titulo.includes(ejecucion.turno)
           );
 
           if (!yaExiste) {
+            const esIncompleta =
+              !ejecucion.total_min || ejecucion.total_min <= 0;
+
+            const descripcionAuto = esIncompleta
+              ? "Ejecución no completada. No se registraron tiempos de proceso."
+              : "Ejecución fallida. El proceso terminó con errores durante la ejecución.";
+
             await createAnotacion({
-              fecha_inicio: ej.fecha,
+              fecha_inicio: ejecucion.fecha,
               fecha_fin:    null,
-              titulo:       `Falla en ejecución ${ej.turno} — ${ej.fecha}`,
-              descripcion:  ej.notas
-                              ? ej.notas
-                              : "Ejecución no completada. No se registraron tiempos de proceso.",
+              titulo:       `Falla en ejecución ${ejecucion.turno} — ${ejecucion.fecha}`,
+              descripcion:  ejecucion.notas
+                              ? ejecucion.notas
+                              : descripcionAuto,
               tipo:         "critico",
               created_by:   "Equipo Quind",
             });
