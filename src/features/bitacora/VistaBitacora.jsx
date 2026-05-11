@@ -1,310 +1,370 @@
-import { useMemo, useState } from "react";
-import { Card, SectionTitle } from "../../components/ui";
+import { useMemo, useReducer, useState } from "react";
+import { Badge } from "../../components/ui";
 import { useTheme } from "../../context/ThemeContext";
-import { createAnotacion, deactivateAnotacion } from "../../services/ejecucionesService";
+import { useAnotaciones } from "../../hooks/useAnotaciones";
 import { useDashboard } from "../../context/useDashboard";
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const emptyForm = () => ({
+  titulo:       "",
+  fecha_inicio: new Date().toISOString().split("T")[0],
+  fecha_fin:    "",
+  tipo:         "info",
+  descripcion:  "",
+  created_by:   "",
+});
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "–";
-  const [y, m, d] = dateStr.split("-");
-  return `${d}/${m}/${y}`;
+const modalReducer = (state, action) => {
+  switch (action.type) {
+    case "OPEN_CREATE":
+      return { isOpen: true, editingId: null, form: emptyForm() };
+    case "OPEN_EDIT":
+      return {
+        isOpen:    true,
+        editingId: action.payload.id,
+        form: {
+          titulo:       action.payload.titulo,
+          fecha_inicio: action.payload.fecha_inicio,
+          fecha_fin:    action.payload.fecha_fin    ?? "",
+          tipo:         action.payload.tipo,
+          descripcion:  action.payload.descripcion  ?? "",
+          created_by:   action.payload.created_by   ?? "",
+        },
+      };
+    case "CLOSE":
+      return { ...state, isOpen: false, editingId: null };
+    case "UPDATE_FIELD":
+      return { ...state, form: { ...state.form, [action.field]: action.value } };
+    default:
+      return state;
+  }
 };
 
-const formatDateTime = (dateStr) => {
-  if (!dateStr) return "–";
-  const d = new Date(dateStr);
-  const date = d.toLocaleDateString("es-CO");
-  const time = d.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", hour12: false });
-  return `${date} ${time}`;
-};
-
-const daysBetweenInclusive = (start, end) => {
-  if (!start || !end) return null;
-  const a = new Date(`${start}T12:00:00`);
-  const b = new Date(`${end}T12:00:00`);
-  const diff = Math.round((b - a) / 86400000) + 1;
-  return diff > 0 ? diff : null;
-};
+const initialModalState = { isOpen: false, editingId: null, form: emptyForm() };
 
 export const VistaBitacora = () => {
-  const { colors: C } = useTheme();
-  const { anotacionesData, refresh } = useDashboard();
+  const { colors: C, theme } = useTheme();
+  const { anotacionesData }   = useDashboard();
+  const { save, remove, saving } = useAnotaciones();
 
-  const [titulo, setTitulo] = useState("");
-  const [fechaInicio, setFechaInicio] = useState(todayIso());
-  const [fechaFin, setFechaFin] = useState("");
-  const [tipo, setTipo] = useState("info");
-  const [descripcion, setDescripcion] = useState("");
-  const [createdBy, setCreatedBy] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [archivingId, setArchivingId] = useState(null);
+  const [modal, dispatchModal] = useReducer(modalReducer, initialModalState);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
-  const tipoColorMap = useMemo(() => ({
-    info: C.blue,
-    advertencia: C.amber,
-    critico: C.red,
-  }), [C]);
-
-  const tipoBadgeMap = {
-    info: "ℹ️ Info",
-    advertencia: "⚠ Advertencia",
-    critico: "🔴 Crítico",
+  const tipoConfig = {
+    info:        { label: "Info",        color: C.blue  },
+    advertencia: { label: "Advertencia", color: C.amber },
+    critico:     { label: "Crítico",     color: C.red   },
   };
 
-  const orderedAnotaciones = useMemo(
-    () => [...(anotacionesData ?? [])].sort((a, b) => (b.fecha_inicio || "").localeCompare(a.fecha_inicio || "")),
+  const handleSave = async () => {
+    if (!modal.form.titulo.trim() || !modal.form.fecha_inicio) return;
+    const payload = {
+      titulo:       modal.form.titulo.trim(),
+      fecha_inicio: modal.form.fecha_inicio,
+      fecha_fin:    modal.form.fecha_fin    || null,
+      tipo:         modal.form.tipo,
+      descripcion:  modal.form.descripcion.trim()  || null,
+      created_by:   modal.form.created_by.trim()   || null,
+    };
+    const ok = await save(payload, modal.editingId);
+    if (ok) dispatchModal({ type: "CLOSE" });
+  };
+
+  const handleDelete = async (id) => {
+    const ok = await remove(id);
+    if (ok) setConfirmDeleteId(null);
+  };
+
+  const setField = (field) => (e) =>
+    dispatchModal({ type: "UPDATE_FIELD", field, value: e.target.value });
+
+  const inputCls = "w-full mt-1.5 rounded-lg px-3 py-2 text-[13px] outline-none transition-colors border";
+  const inputStyle = { background: C.cardAlt, borderColor: C.border2, color: C.text };
+
+  const anotaciones = useMemo(
+    () => [...(anotacionesData ?? [])].sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio)),
     [anotacionesData]
   );
 
-  const resetForm = () => {
-    setTitulo("");
-    setFechaInicio(todayIso());
-    setFechaFin("");
-    setTipo("info");
-    setDescripcion("");
-    setCreatedBy("");
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!titulo.trim() || !fechaInicio || !tipo) return;
-
-    setSaving(true);
-    try {
-      await createAnotacion({
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin || null,
-        titulo: titulo.trim(),
-        descripcion: descripcion.trim() || null,
-        tipo,
-        activo: true,
-        created_by: createdBy.trim() || null,
-      });
-      resetForm();
-      await refresh();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const onArchive = async (id) => {
-    const confirmed = window.confirm("¿Archivar esta anotación?");
-    if (!confirmed) return;
-    setArchivingId(id);
-    try {
-      await deactivateAnotacion(id);
-      await refresh();
-    } finally {
-      setArchivingId(null);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
-      <Card style={{ padding: "1.25rem", background: C.card, border: `1px solid ${C.border}` }}>
-        <SectionTitle noMargin>Nueva Anotación</SectionTitle>
-        <form className="mt-4 flex flex-col gap-4" onSubmit={onSubmit}>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs" style={{ color: C.textSub }}>Título *</label>
-            <input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              required
-              placeholder="Ej: Nueva infraestructura adoptada"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-              style={{
-                background: C.cardAlt,
-                borderColor: C.border,
-                color: C.text
-              }}
-            />
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background:   C.card,
+          border:       theme === "light" ? "1px solid #c8cdde" : `1px solid ${C.border}`,
+          borderRadius: 12,
+        }}
+      >
+        <div
+          className="flex justify-between items-center px-5 py-4"
+          style={{ borderBottom: `1px solid ${C.border}` }}
+        >
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-[13px] font-semibold uppercase tracking-wide m-0" style={{ color: C.textSub }}>
+              Registro de Eventos
+            </h3>
+            {anotaciones.length > 0 && (
+              <Badge label={`${anotaciones.length} registrados`} color={C.blue} />
+            )}
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs" style={{ color: C.textSub }}>Fecha inicio *</label>
-              <input
-                type="date"
-                value={fechaInicio}
-                onChange={(e) => setFechaInicio(e.target.value)}
-                required
-                className="rounded-lg border px-3 py-2 text-sm outline-none"
-                style={{
-                  background: C.cardAlt,
-                  borderColor: C.border,
-                  color: C.text
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs" style={{ color: C.textSub }}>Fecha fin</label>
-              <input
-                type="date"
-                value={fechaFin}
-                onChange={(e) => setFechaFin(e.target.value)}
-                placeholder="Opcional"
-                className="rounded-lg border px-3 py-2 text-sm outline-none"
-                style={{
-                  background: C.cardAlt,
-                  borderColor: C.border,
-                  color: C.text
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs" style={{ color: C.textSub }}>Tipo *</label>
-            <div className="flex flex-wrap gap-2">
-              {["info", "advertencia", "critico"].map((t) => {
-                const isActive = tipo === t;
-                const color = tipoColorMap[t];
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTipo(t)}
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold border"
-                    style={{
-                      color: isActive ? color : C.textMuted,
-                      borderColor: isActive ? `${color}77` : C.border2,
-                      background: isActive ? `${color}22` : C.cardAlt,
-                    }}
-                  >
-                    {t === "info" ? "Info" : t === "advertencia" ? "Advertencia" : "Crítico"}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs" style={{ color: C.textSub }}>Descripción</label>
-            <textarea
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={3}
-              placeholder="Descripción detallada del evento..."
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none resize-y"
-              style={{
-                background: C.cardAlt,
-                borderColor: C.border,
-                color: C.text
-              }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs" style={{ color: C.textSub }}>Creado por</label>
-            <input
-              value={createdBy}
-              onChange={(e) => setCreatedBy(e.target.value)}
-              placeholder="Tu nombre"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-              style={{
-                background: C.cardAlt,
-                borderColor: C.border,
-                color: C.text
-              }}
-            />
-          </div>
-
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg px-4 py-2 text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ background: C.green, color: C.bg }}
-            >
-              {saving ? "Guardando..." : "Guardar anotación"}
-            </button>
-          </div>
-        </form>
-      </Card>
-
-      <Card style={{ padding: "1.25rem" }}>
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <SectionTitle noMargin>Historial de Anotaciones</SectionTitle>
-          <span
-            className="text-xs px-2.5 py-1 rounded-full border"
-            style={{ color: C.textSub, borderColor: C.border2, background: C.cardAlt }}
+          <button
+            onClick={() => dispatchModal({ type: "OPEN_CREATE" })}
+            className="px-3.5 py-1.5 rounded-lg border-0 text-xs font-bold cursor-pointer transition-opacity hover:opacity-80"
+            style={{ background: C.green, color: C.bg }}
           >
-            {orderedAnotaciones.length} anotaciones activas
-          </span>
+            + Nuevo evento
+          </button>
         </div>
 
-        {!orderedAnotaciones.length ? (
-          <p className="text-sm m-0" style={{ color: C.textMuted }}>
-            No hay anotaciones registradas. Crea la primera usando el formulario.
-          </p>
+        {anotaciones.length === 0 ? (
+          <div className="px-5 py-6 text-center">
+            <p className="text-[13px] m-0" style={{ color: C.textMuted }}>
+              No hay eventos registrados. Crea el primero con el botón "Nuevo evento".
+            </p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {orderedAnotaciones.map((a) => {
-              const color = tipoColorMap[a.tipo] ?? C.textSub;
-              const duration = a.duracion_dias ?? daysBetweenInclusive(a.fecha_inicio, a.fecha_fin);
+          <div
+            className="p-3 grid gap-2.5"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))" }}
+          >
+            {anotaciones.map((anotacion) => {
+              const cfg   = tipoConfig[anotacion.tipo] ?? tipoConfig.info;
+              const color = cfg.color;
+              const isConfirming = confirmDeleteId === anotacion.id;
 
               return (
                 <div
-                  key={a.id}
-                  className="rounded-lg border p-3.5"
-                  style={{ borderColor: C.border, borderLeft: `3px solid ${color}`, background: C.cardAlt }}
+                  key={anotacion.id}
+                  className="rounded-lg p-3.5 flex flex-col gap-1.5"
+                  style={{
+                    background:  C.cardAlt,
+                    borderLeft:  `3px solid ${color}`,
+                    border:      `1px solid ${C.border}`,
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="m-0 text-[14px] font-bold" style={{ color: C.text }}>{a.titulo}</p>
-                    <button
-                      type="button"
-                      onClick={() => onArchive(a.id)}
-                      disabled={archivingId === a.id}
-                      className="text-[11px] px-2 py-1 rounded border disabled:opacity-60"
-                      style={{ color: C.textSub, borderColor: C.border2, background: C.card }}
-                    >
-                      {archivingId === a.id ? "Archivando..." : "Archivar"}
-                    </button>
-                  </div>
-
-                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs" style={{ color: C.textSub }}>
-                    <span>
-                      {a.fecha_fin
-                        ? `${formatDate(a.fecha_inicio)} → ${formatDate(a.fecha_fin)}${duration ? ` (${duration} días)` : ""}`
-                        : formatDate(a.fecha_inicio)}
-                    </span>
-                    {a.es_hoy && (
-                      <span
-                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold border"
-                        style={{ color: C.green, borderColor: `${C.green}66`, background: `${C.green}1a` }}
-                      >
-                        Hoy
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold" style={{ color: C.text }}>
+                        {anotacion.titulo}
                       </span>
-                    )}
+                      <span
+                        className="text-[11px] font-semibold px-2 py-0.5 rounded"
+                        style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
+                      >
+                        {cfg.label}
+                      </span>
+                      {anotacion.es_hoy && (
+                        <span
+                          className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                          style={{ color: C.green, background: `${C.green}18`, border: `1px solid ${C.green}44` }}
+                        >
+                          Hoy
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex gap-1.5 shrink-0 items-center">
+                      {isConfirming ? (
+                        <>
+                          <span className="text-[11px]" style={{ color: C.red }}>¿Eliminar?</span>
+                          <button
+                            onClick={() => handleDelete(anotacion.id)}
+                            className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent"
+                            style={{ borderColor: C.redBdr, color: C.red }}
+                          >
+                            Sí
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent"
+                            style={{ borderColor: C.border2, color: C.textMuted }}
+                          >
+                            No
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => dispatchModal({ type: "OPEN_EDIT", payload: anotacion })}
+                            className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent transition-opacity hover:opacity-70"
+                            style={{ borderColor: C.border2, color: C.blue }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(anotacion.id)}
+                            className="border rounded-md px-2.5 py-1 text-[11px] cursor-pointer bg-transparent transition-opacity hover:opacity-70"
+                            style={{ borderColor: C.redBdr, color: C.red }}
+                          >
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="mt-2">
-                    <span
-                      className="text-[11px] px-2 py-1 rounded-md border font-semibold"
-                      style={{ color, borderColor: `${color}66`, background: `${color}1a` }}
-                    >
-                      {tipoBadgeMap[a.tipo] ?? "ℹ️ Info"}
-                    </span>
-                  </div>
+                  <span
+                    className="text-[11px]"
+                    style={{ color: C.textSub, fontFamily: "'IBM Plex Mono', monospace" }}
+                  >
+                    {anotacion.fecha_inicio}
+                    {anotacion.fecha_fin ? ` → ${anotacion.fecha_fin} (${anotacion.duracion_dias} días)` : ""}
+                  </span>
 
-                  {a.descripcion && (
-                    <p className="mt-2 m-0 text-[13px] italic" style={{ color: C.textSub }}>
-                      {a.descripcion}
+                  {anotacion.descripcion && (
+                    <p className="text-[13px] italic m-0" style={{ color: C.textSub }}>
+                      {anotacion.descripcion}
                     </p>
                   )}
 
-                  <div className="mt-2.5 flex items-center justify-between gap-3 text-[11px]" style={{ color: C.textDim }}>
-                    <span>Registrado por: {a.created_by || "–"}</span>
-                    <span>{formatDateTime(a.created_at)}</span>
-                  </div>
+                  <span className="text-[11px]" style={{ color: C.textDim }}>
+                    {anotacion.created_by ? `Registrado por: ${anotacion.created_by} · ` : ""}
+                    {new Date(anotacion.created_at).toLocaleDateString("es-CO")}
+                  </span>
                 </div>
               );
             })}
           </div>
         )}
-      </Card>
+      </div>
+
+      {modal.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-5"
+          style={{ background: "rgba(0,0,0,0.75)" }}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl p-7 flex flex-col gap-4"
+            style={{ background: C.card, border: `1px solid ${C.border2}` }}
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="m-0 text-base font-bold" style={{ color: C.text }}>
+                {modal.editingId ? "Editar Evento" : "Nuevo Evento"}
+              </h3>
+              <button
+                onClick={() => dispatchModal({ type: "CLOSE" })}
+                className="bg-transparent border-0 text-xl cursor-pointer leading-none"
+                style={{ color: C.textMuted }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                Título *
+              </label>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                value={modal.form.titulo}
+                onChange={setField("titulo")}
+                placeholder="Ej: Nueva infraestructura adoptada"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                  Fecha inicio *
+                </label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  style={inputStyle}
+                  value={modal.form.fecha_inicio}
+                  onChange={setField("fecha_inicio")}
+                />
+              </div>
+              <div>
+                <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                  Fecha fin (opcional)
+                </label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  style={inputStyle}
+                  value={modal.form.fecha_fin}
+                  onChange={setField("fecha_fin")}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                Tipo
+              </label>
+              <div className="flex gap-2 mt-1.5">
+                {Object.entries(tipoConfig).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => dispatchModal({ type: "UPDATE_FIELD", field: "tipo", value: key })}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-150"
+                    style={{
+                      border:     `1px solid ${modal.form.tipo === key ? cfg.color : C.border}`,
+                      background: modal.form.tipo === key ? `${cfg.color}22` : "transparent",
+                      color:      modal.form.tipo === key ? cfg.color : C.textMuted,
+                    }}
+                  >
+                    {cfg.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                Descripción (opcional)
+              </label>
+              <textarea
+                className={`${inputCls} resize-y`}
+                style={inputStyle}
+                rows={3}
+                value={modal.form.descripcion}
+                onChange={setField("descripcion")}
+                placeholder="Descripción detallada del evento..."
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] uppercase tracking-wide" style={{ color: C.textMuted }}>
+                Registrado por (opcional)
+              </label>
+              <input
+                className={inputCls}
+                style={inputStyle}
+                value={modal.form.created_by}
+                onChange={setField("created_by")}
+                placeholder="Tu nombre"
+              />
+            </div>
+
+            <div className="flex gap-2.5 justify-end mt-1">
+              <button
+                onClick={() => dispatchModal({ type: "CLOSE" })}
+                className="px-5 py-2 rounded-lg text-[13px] cursor-pointer bg-transparent transition-opacity hover:opacity-70"
+                style={{ border: `1px solid ${C.border2}`, color: C.textMuted }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !modal.form.titulo.trim()}
+                className="px-6 py-2 rounded-lg text-[13px] font-bold border-0 transition-opacity"
+                style={{
+                  background: !modal.form.titulo.trim() ? C.border : C.green,
+                  color:      C.bg,
+                  cursor:     !modal.form.titulo.trim() ? "not-allowed" : "pointer",
+                  opacity:    saving ? 0.7 : 1,
+                }}
+              >
+                {saving ? "Guardando..." : modal.editingId ? "Actualizar evento" : "Guardar evento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

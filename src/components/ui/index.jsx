@@ -1,4 +1,5 @@
 import { useState } from "react";
+export { NivelesLeyenda } from "./NivelesLeyenda";
 import { fmtMin } from "../../utils/format";
 import { useTheme } from "../../context/ThemeContext";
 

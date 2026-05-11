@@ -1,5 +1,5 @@
 import { TABS, FILTROS_EJECUCION } from "../../constants/config";
-import { useDashboard } from "../../context/useDashboard";
+import { useUIContext } from "../../context/UIContext";
 import { useTheme } from "../../context/ThemeContext";
 
 // ─── Botón de tab individual ──────────────────────────────────────────────────
@@ -56,7 +56,7 @@ const EjBtn = ({ label, active, onClick }) => {
 
 // ─── Barra de navegación completa ─────────────────────────────────────────────
 export const NavBar = () => {
-  const { viewMode, ejFilter, detailData, setViewMode, setEjFilter } = useDashboard();
+  const { viewMode, ejFilter, detailData, setViewMode, setEjFilter } = useUIContext();
   const { colors: C } = useTheme();
 
   return (
