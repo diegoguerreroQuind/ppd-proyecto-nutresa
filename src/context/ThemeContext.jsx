@@ -37,6 +37,11 @@ export const ThemeProvider = ({ children }) => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // Sync .light class on <html> so CSS variables and scrollbar switch correctly
+  useEffect(() => {
+    document.documentElement.classList.toggle("light", theme === "light");
+  }, [theme]);
+
   const colors = useMemo(
     () => theme === "light" ? lightTheme : darkTheme,
     [theme]

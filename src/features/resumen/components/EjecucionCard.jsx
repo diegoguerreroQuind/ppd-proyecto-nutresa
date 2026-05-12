@@ -18,7 +18,7 @@ export const EjecucionCard = ({ ej, kpis }) => {
 
   const prom7  = d7.prom  ?? 0;
   const prom30 = d30.prom ?? 0;
-  const boxBg  = theme === "light" ? (ej === "EJ1" ? "#f0f4ff" : "#fffbeb") : C.cardAlt;
+  const boxBg  = theme === "light" ? (ej === "EJ1" ? "#EEF2FD" : "#FEF3E2") : C.cardAlt;
 
   return (
     <Card style={{ borderLeft: `3px solid ${clr}`, boxShadow: C.shadow ?? "none" }}>

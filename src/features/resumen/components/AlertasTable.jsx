@@ -10,17 +10,23 @@ export const AlertasTable = ({ filtered, banda, anotaciones }) => {
   const { colors: C, theme } = useTheme();
   const nivelColors = nivelColorMapFn(C);
 
-  const alertasAutomaticas = useMemo(
-    () => (filtered ?? []).filter(
-      (d) => !d.exitoso || !d.total_min || d.total_min <= 0 || d.total_min > banda.advertencia
-    ),
-    [filtered, banda]
-  );
+  const alertasAutomaticas = useMemo(() => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() - 7);
+    const limiteStr = limite.toISOString().slice(0, 10);
+    return (filtered ?? []).filter(
+      (d) => d.fecha >= limiteStr && (!d.exitoso || !d.total_min || d.total_min <= 0 || d.total_min > banda.advertencia)
+    );
+  }, [filtered, banda]);
 
-  const eventosImportantes = useMemo(
-    () => (anotaciones ?? []).filter((a) => a.tipo === "advertencia" || a.tipo === "critico"),
-    [anotaciones]
-  );
+  const eventosImportantes = useMemo(() => {
+    const limite = new Date();
+    limite.setDate(limite.getDate() - 7);
+    const limiteStr = limite.toISOString().slice(0, 10);
+    return (anotaciones ?? []).filter(
+      (a) => (a.tipo === "advertencia" || a.tipo === "critico" || a.tipo === "info") && a.fecha_inicio >= limiteStr
+    );
+  }, [anotaciones]);
 
   const totalAlertas = alertasAutomaticas.length + eventosImportantes.length;
 
@@ -30,7 +36,7 @@ export const AlertasTable = ({ filtered, banda, anotaciones }) => {
     <Card
       overflow
       style={{
-        border:       theme === "light" ? "1px solid #c8cdde" : `1px solid ${C.border}`,
+        border:       `1px solid ${C.border2}`,
         borderRadius: 12,
       }}
     >
@@ -51,13 +57,14 @@ export const AlertasTable = ({ filtered, banda, anotaciones }) => {
             Eventos manuales registrados
           </p>
           {eventosImportantes.map((a) => {
-            const color = a.tipo === "critico" ? C.red : C.amber;
+            const color = a.tipo === "critico" ? C.red : a.tipo === "advertencia" ? C.amber : C.blue;
+            const bgColor = a.tipo === "critico" ? C.redBg : `${color}11`;
             return (
               <div
                 key={a.id}
                 className="rounded-lg px-3.5 py-2.5 flex justify-between items-start gap-3"
                 style={{
-                  background:  a.tipo === "critico" ? C.redBg : `${C.amber}11`,
+                  background:  bgColor,
                   border:      `1px solid ${color}44`,
                   borderLeft:  `3px solid ${color}`,
                 }}

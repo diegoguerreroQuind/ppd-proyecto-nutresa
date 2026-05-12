@@ -51,7 +51,7 @@ const TablaSemanal = ({ weeklyData, ejFilter, banda, onRowClick }) => {
     <Card
       overflow
       style={{
-        border: theme === "light" ? `1px solid #c8cdde` : `1px solid ${C.border}`,
+        border: `1px solid ${theme === "light" ? C.border2 : C.border}`,
         borderRadius: 12,
       }}
     >

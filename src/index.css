@@ -65,4 +65,50 @@
   }
 }
 
-/* Component styles are defined directly with Tailwind utilities in JSX. */
+/* ─── Light mode: clase .light en <html> via ThemeContext ─────────────────── */
+.light {
+  /* Backgrounds */
+  --color-bg:           #F3F7FA;
+  --color-card:         #FFFFFF;
+  --color-card-alt:     #F2F5F8;
+  --color-card-hover:   #EBF0F7;
+
+  /* Borders */
+  --color-border:       #E2E8EF;
+  --color-border-2:     #CBD5E1;
+
+  /* Typography */
+  --color-text-base:    #0F172A;
+  --color-text-sub:     #334155;
+  --color-text-muted:   #64748B;
+  --color-text-dim:     #94A3B8;
+
+  /* Brand */
+  --color-quind-green:  #16A34A;
+  --color-quind-blue:   #1D4ED8;
+  --color-quind-amber:  #B45309;
+  --color-quind-purple: #7C3AED;
+  --color-quind-teal:   #0E7490;
+  --color-quind-red:    #DC2626;
+  --color-quind-red-bg:  #FFF1F2;
+  --color-quind-red-bdr: #FECDD3;
+}
+
+/* Light mode body y scrollbar */
+.light body,
+html.light {
+  background-color: #F3F7FA;
+  color: #0F172A;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #F2F5F8;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

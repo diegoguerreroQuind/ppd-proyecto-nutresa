@@ -7,64 +7,94 @@ export const DashboardHeader = ({
   const { colors: C } = useTheme();
 
   return (
-    <div className="mb-9 relative">
-      <div className="flex items-center gap-2.5 mb-1">
-        <div className="w-2 h-2 rounded-full bg-quind-green shadow-[0_0_8px_#00e5a0]" />
-        <span className="text-[11px] text-quind-green tracking-[3px] uppercase">
+    <div className="mb-8 relative">
+      {/* Acento de marca: barra izquierda azul visible solo en modo claro */}
+      {theme === "light" && (
+        <div style={{
+          position:     "absolute",
+          left:         -24,
+          top:          0,
+          bottom:       0,
+          width:        3,
+          background:   `linear-gradient(to bottom, ${C.blue}, ${C.teal})`,
+          borderRadius: 2,
+        }} />
+      )}
+
+      <div className="flex items-center gap-2 mb-1.5">
+        <div
+          className="w-2 h-2 rounded-full"
+          style={{
+            background: C.green,
+            boxShadow:  theme === "light" ? `0 0 6px ${C.green}88` : "0 0 8px #00e5a0",
+          }}
+        />
+        <span
+          className="text-[11px] tracking-[2.5px] uppercase font-semibold"
+          style={{ color: C.green }}
+        >
           Sistema activo
         </span>
       </div>
+
       <h1
         style={{
-          color:      theme === "light" ? "#0d1117" : C.text,
-          fontSize:   28,
-          fontWeight: 800,
-          margin:     0,
+          color:       C.text,
+          fontSize:    26,
+          fontWeight:  800,
+          margin:      0,
+          letterSpacing: "-0.3px",
+          lineHeight:  1.2,
         }}
       >
         Monitor de Ejecuciones PPD
       </h1>
       <p
         style={{
-          color: theme === "light" ? "#374151" : C.textSub,
-          fontSize: 13,
-          marginTop: 4,
+          color:      C.textMuted,
+          fontSize:   13,
+          marginTop:  5,
           marginBottom: 0,
+          fontWeight: 400,
         }}
       >
         Nutresa · Portafolio, Precios y Descuentos · Histórico desde Mar 31
       </p>
+
       {lastUpdate && (
-        <p style={{ color: C.textDim, fontSize: 11, margin: "4px 0 0", fontFamily: "'IBM Plex Mono', monospace" }}>
+        <p style={{
+          color:      C.textDim,
+          fontSize:   11,
+          margin:     "6px 0 0",
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}>
           Última actualización: {lastUpdate.toLocaleTimeString("es-CO")}
           {" · "}
           <span
             onClick={onRefresh}
-            style={{ color: C.green, cursor: "pointer", textDecoration: "underline" }}
+            style={{ color: C.blue, cursor: "pointer", textDecoration: "underline" }}
           >
             Actualizar ahora
           </span>
         </p>
       )}
 
+      {/* Controles: toggle + logo */}
       <div style={{
-        position: "absolute",
-        top:      0,
-        right:    0,
-        display:  "flex",
+        position:   "absolute",
+        top:        0,
+        right:      0,
+        display:    "flex",
         alignItems: "center",
-        gap:      16,
+        gap:        12,
       }}>
-        {/* Theme toggle button */}
         <button
           onClick={onToggleTheme}
-          title={theme === "dark"
-            ? "Cambiar a modo claro"
-            : "Cambiar a modo oscuro"}
+          title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
           style={{
-            background:   theme === "light" ? C.cardAlt : C.card,
+            background:   C.card,
             border:       `1px solid ${C.border2}`,
-            borderRadius: 20,
+            borderRadius: 10,
             padding:      "7px 14px",
             cursor:       "pointer",
             display:      "flex",
@@ -73,39 +103,32 @@ export const DashboardHeader = ({
             fontSize:     12,
             fontWeight:   600,
             color:        C.textSub,
-            boxShadow:    C.shadow ?? "none",
-            transition:   "all 0.2s ease",
+            boxShadow:    C.shadow,
+            transition:   "all 0.18s ease",
           }}
         >
           {theme === "dark" ? (
-            <>
-              <span style={{ fontSize: 16 }}>☀️</span>
-              <span>Modo Claro</span>
-            </>
+            <><span style={{ fontSize: 15 }}>☀️</span><span>Modo Claro</span></>
           ) : (
-            <>
-              <span style={{ fontSize: 16 }}>🌙</span>
-              <span>Modo Oscuro</span>
-            </>
+            <><span style={{ fontSize: 15 }}>🌙</span><span>Modo Oscuro</span></>
           )}
         </button>
 
         <div style={{
-          background:   theme === "light"
-                          ? "rgba(0,0,0,0.06)"
-                          : "transparent",
-          borderRadius: 8,
-          padding:      theme === "light" ? "4px 8px" : 0,
-          transition:   "all 0.2s ease",
+          background:   theme === "light" ? C.cardAlt : "transparent",
+          border:       theme === "light" ? `1px solid ${C.border}` : "none",
+          borderRadius: 10,
+          padding:      theme === "light" ? "6px 10px" : 0,
+          transition:   "all 0.18s ease",
         }}>
           <img
             src={logoQuind}
             alt="Quind logo"
             style={{
-              height:    56,
+              height:    50,
               width:     "auto",
               objectFit: "contain",
-              opacity:   theme === "light" ? 1 : 0.9,
+              opacity:   theme === "light" ? 1 : 0.88,
             }}
           />
         </div>

@@ -74,7 +74,7 @@ const CalendarioPicker = ({
   return (
     <div style={{
       background:   C.card,
-      border:       theme === "light" ? `1px solid #c8cdde` : `1px solid ${C.border2}`,
+      border:       `1px solid ${C.border2}`,
       borderRadius: 16,
       padding:      24,
       width:        320,

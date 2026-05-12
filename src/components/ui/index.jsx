@@ -187,7 +187,7 @@ export const Th = ({ children, className = "" }) => {
         color: C.textDim,
         background: C.cardAlt,
         borderBottom: theme === "light"
-          ? "2px solid #c8cdde"
+          ? `2px solid ${C.border2}`
           : `1px solid ${C.border}`
       }}
     >
@@ -197,15 +197,13 @@ export const Th = ({ children, className = "" }) => {
 };
 
 export const Td = ({ children, className = "", style = {} }) => {
-  const { colors: C, theme } = useTheme();
+  const { colors: C } = useTheme();
   return (
     <td
       className={`py-[11px] px-3.5 ${className}`}
       style={{
         color: C.text,
-        borderTop: theme === "light"
-          ? `1px solid #d1d5e0`
-          : `1px solid ${C.border}`,
+        borderTop: `1px solid ${C.border}`,
         ...style
       }}
     >
@@ -215,7 +213,7 @@ export const Td = ({ children, className = "", style = {} }) => {
 };
 
 export const MonoTd = ({ children, style = {}, className = "" }) => {
-  const { colors: C, theme } = useTheme();
+  const { colors: C } = useTheme();
   return (
     <td
       className={`py-[11px] px-3.5 ${className}`}
@@ -223,9 +221,7 @@ export const MonoTd = ({ children, style = {}, className = "" }) => {
         fontFamily: "'IBM Plex Mono', monospace",
         fontSize: 13,
         color: C.text,
-        borderTop: theme === "light"
-          ? `1px solid #d1d5e0`
-          : `1px solid ${C.border}`,
+        borderTop: `1px solid ${C.border}`,
         ...style,
       }}
     >

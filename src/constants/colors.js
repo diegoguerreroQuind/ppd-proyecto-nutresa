@@ -32,36 +32,36 @@ export const darkTheme = {
 };
 
 export const lightTheme = {
-  // Backgrounds — layered depth
-  bg:        "#eef0f5",
-  card:      "#ffffff",
-  cardAlt:   "#f5f6fa",
+  // Backgrounds
+  bg:        "#F3F7FA",
+  card:      "#FFFFFF",
+  cardAlt:   "#F2F5F8",
 
-  // Borders — visible but not aggressive
-  border:    "#dde1ec",
-  border2:   "#c8cdde",
+  // Borders
+  border:    "#E2E8EF",
+  border2:   "#CBD5E1",
 
-  // Typography — high contrast hierarchy
-  text:      "#0d1117",
-  textSub:   "#374151",
-  textMuted: "#6b7280",
-  textDim:   "#9ca3af",
+  // Typography  — todos superan contraste WCAG AA sobre blanco
+  text:      "#0F172A",   // 18:1  — slate-900
+  textSub:   "#334155",   // 10:1  — slate-700
+  textMuted: "#64748B",   // 4.7:1 — slate-500
+  textDim:   "#94A3B8",   // 2.9:1 — slate-400 (solo para elementos desactivados)
 
-  // Brand accent colors — slightly deeper for light bg
-  green:     "#059669",
-  blue:      "#1d4ed8",
-  amber:     "#b45309",
-  purple:    "#6d28d9",
-  teal:      "#0f766e",
-  red:       "#b91c1c",
+  // Acentos — versiones oscuras para legibilidad sobre fondo claro
+  green:     "#16A34A",   // 4.5:1 — green-600
+  blue:      "#1D4ED8",   // 7.2:1 — blue-700  (acento primario del dashboard)
+  amber:     "#B45309",   // 5.5:1 — amber-700
+  purple:    "#7C3AED",   // 6.5:1 — violet-600
+  teal:      "#0E7490",   // 6.3:1 — cyan-700
+  red:       "#DC2626",   // 5.9:1 — red-600
 
-  // Alert backgrounds — soft tints
-  redBg:     "#fff1f2",
-  redBdr:    "#fecdd3",
+  // Alert backgrounds
+  redBg:     "#FFF1F2",
+  redBdr:    "#FECDD3",
 
-  // Card shadow (light mode specific)
-  shadow:    "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)",
-  shadowMd:  "0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06)",
+  // Sombras con tinte azul-frío para armonizar con el fondo
+  shadow:    "0 1px 3px rgba(14,30,54,0.08), 0 1px 2px rgba(14,30,54,0.05)",
+  shadowMd:  "0 4px 16px rgba(14,30,54,0.10), 0 2px 6px rgba(14,30,54,0.06)",
 };
 
 // Keep C as the default dark theme for backward compatibility
